@@ -69,6 +69,8 @@ def lecture_timer_tab():
             st.session_state.records = []
         if 'slide_number' not in st.session_state:
             st.session_state.slide_number = 1
+        if 'start_time_value' not in st.session_state:
+            st.session_state.start_time_value = "00:00"
 
         # 두 개의 주요 컬럼으로 레이아웃 구성
         left_col, right_col = st.columns([1, 2])
@@ -77,7 +79,7 @@ def lecture_timer_tab():
             # Lecture Information 섹션
             st.subheader("Lecture Information")
             lecture_name = st.selectbox(
-                "강의:",
+                "강의 선택",
                 st.session_state.lecture_names if st.session_state.lecture_names else ["강의를 추가해주세요"],
                 key="lecture_name"
             )
@@ -86,36 +88,56 @@ def lecture_timer_tab():
                 st.info("Settings 탭에서 강의를 추가해주세요.")
             
             dates = [(datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
-            date = st.selectbox("날짜:", dates, key="date")
+            date = st.selectbox("날짜", dates, key="date")
 
             # Stopwatch 섹션
-            st.subheader("Slide Timer")
-            start_time_input = st.text_input("Start Time", value="00:00", key="start_time_input")
+            st.subheader("Timer")
+            # Start Time 입력 필드 (Pause 상태에서만 편집 가능)
+            start_time_input = st.text_input(
+                "Start Time",
+                value=st.session_state.start_time_value,
+                key="start_time_input",
+                disabled=st.session_state.timer_running
+            )
+            # Update start_time_value with user input
+            st.session_state.start_time_value = start_time_input
             
             col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
                 start_button_label = "Resume" if st.session_state.elapsed_time > 0 and not st.session_state.timer_running else "Start"
                 if st.button(start_button_label, disabled=st.session_state.timer_running, use_container_width=True):
-                    if st.session_state.elapsed_time == 0 or st.session_state.start_time is None:
-                        # 처음 시작하는 경우
-                        try:
-                            start_time_str = start_time_input
-                            start_time = datetime.strptime(start_time_str, "%M:%S")
-                            st.session_state.start_time = datetime.combine(datetime.now().date(), start_time.time())
-                            if st.session_state.start_time > datetime.now():
-                                st.session_state.start_time -= timedelta(days=1)
-                        except ValueError:
-                            st.session_state.start_time = datetime.combine(datetime.now().date(), datetime.time(0, 0, 0))
+                    # Start 버튼 클릭 시
+                    try:
+                        start_time_str = start_time_input
+                        new_start_time = datetime.strptime(start_time_str, "%M:%S")
+                        new_start_time = datetime.combine(datetime.now().date(), new_start_time.time())
+                        if new_start_time > datetime.now():
+                            new_start_time -= timedelta(days=1)
+                        
+                        # Check if start_time has changed
+                        current_start_time_str = st.session_state.start_time.strftime("%M:%S") if st.session_state.start_time else "00:00"
+                        if start_time_str != current_start_time_str:
+                            # Reset elapsed_time if start_time is modified
+                            st.session_state.elapsed_time = 0
+                            st.session_state.last_slide_start_time = new_start_time.strftime("%H:%M:%S") + ".000"
+                        
+                        st.session_state.start_time = new_start_time
+                    except ValueError:
+                        st.session_state.start_time = datetime.combine(datetime.now().date(), datetime.time(0, 0, 0))
+                        st.session_state.elapsed_time = 0
                         st.session_state.last_slide_start_time = st.session_state.start_time.strftime("%H:%M:%S") + ".000"
-                    # 일시정지 후 재개하는 경우는 elapsed_time이 유지된 상태에서 timer_start만 갱신
+                    
+                    # Set timer_running and update timer_start
                     st.session_state.timer_running = True
                     st.session_state.timer_start = datetime.now()
+                    
                     st.rerun()
             with col2:
                 if st.button("Pause", disabled=not st.session_state.timer_running, use_container_width=True):
                     st.session_state.timer_running = False
                     # 현재까지 경과한 시간을 누적
-                    st.session_state.elapsed_time = st.session_state.elapsed_time + (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
+                    if st.session_state.timer_start:
+                        st.session_state.elapsed_time += (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
                     st.rerun()
             with col3:
                 if st.button("Reset", use_container_width=True):
@@ -126,78 +148,102 @@ def lecture_timer_tab():
                     st.session_state.last_slide_start_time = None
                     st.session_state.records = []
                     st.session_state.slide_number = 1
+                    # Reset start_time_value instead of start_time_input
+                    st.session_state.start_time_value = "00:00"
                     st.rerun()
 
             # 타이머 표시
-            if st.session_state.timer_start or st.session_state.elapsed_time > 0:
-                elapsed_ms = st.session_state.elapsed_time
-                if st.session_state.timer_running:
-                    current_elapsed = (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
-                    elapsed_ms = st.session_state.elapsed_time + current_elapsed
-                elapsed_seconds = elapsed_ms / 1000
-                if st.session_state.start_time:
-                    absolute_time = st.session_state.start_time + timedelta(seconds=elapsed_seconds)
-                    initial_time = absolute_time.strftime("%H:%M:%S") + f".{int(elapsed_ms % 1000):03d}"
-                else:
-                    # start_time이 없는 경우 (직접 경과 시간 표시)
-                    hours = int(elapsed_seconds // 3600)
-                    minutes = int((elapsed_seconds % 3600) // 60)
-                    seconds = int(elapsed_seconds % 60)
-                    milliseconds = int(elapsed_ms % 1000)
-                    initial_time = f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
+            elapsed_ms = st.session_state.elapsed_time
+            if st.session_state.timer_running and st.session_state.timer_start:
+                elapsed_ms += (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
+            elapsed_seconds = elapsed_ms / 1000
+            if st.session_state.start_time:
+                absolute_time = st.session_state.start_time + timedelta(seconds=elapsed_seconds)
+                initial_time = absolute_time.strftime("%H:%M:%S") + f".{int(elapsed_ms % 1000):03d}"
             else:
-                initial_time = "00:00:00.000"
+                hours = int(elapsed_seconds // 3600)
+                minutes = int((elapsed_seconds % 3600) // 60)
+                seconds = int(elapsed_seconds % 60)
+                milliseconds = int(elapsed_ms % 1000)
+                initial_time = f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
 
+            # JavaScript로 전달할 start_time_ms 계산
+            start_time_ms = 0
+            if st.session_state.start_time:
+                start_time_ms = (
+                    st.session_state.start_time.hour * 3600 +
+                    st.session_state.start_time.minute * 60 +
+                    st.session_state.start_time.second
+                ) * 1000
+            
             timer_html = f"""
             <div id="timer-display" style="font-size: 18px; font-weight: bold; padding: 10px; border: 1px solid #ddd; border-radius: 5px; text-align: center;">{initial_time}</div>
             <script>
                 let timerRunning = {str(st.session_state.timer_running).lower()};
                 let startTime = new Date().getTime();
-                let elapsedTime = {st.session_state.elapsed_time};
-
+                let elapsedTime = {elapsed_ms};
+                let baseTimeMs = {start_time_ms};
+                
                 function updateTimer() {{
                     if (timerRunning) {{
                         let now = new Date().getTime();
-                        let elapsedMs = (now - startTime) + elapsedTime;
-                        let elapsedSeconds = Math.floor(elapsedMs / 1000);
-                        let hours = Math.floor(elapsedSeconds / 3600);
-                        let minutes = Math.floor((elapsedSeconds % 3600) / 60);
-                        let seconds = elapsedSeconds % 60;
-                        let milliseconds = Math.floor(elapsedMs % 1000);
+                        let elapsedMs = elapsedTime + (now - startTime);
+                        let totalMs = baseTimeMs + elapsedMs;
+                        let hours = Math.floor(totalMs / (1000 * 3600));
+                        let minutes = Math.floor((totalMs % (1000 * 3600)) / (1000 * 60));
+                        let seconds = Math.floor((totalMs % (1000 * 60)) / 1000);
+                        let milliseconds = Math.floor(totalMs % 1000);
                         let timeStr = hours.toString().padStart(2, '0') + ':' +
                                       minutes.toString().padStart(2, '0') + ':' +
                                       seconds.toString().padStart(2, '0') + '.' +
                                       milliseconds.toString().padStart(3, '0');
-                        document.getElementById('timer-display').innerText = timeStr;
+                        let display = document.getElementById('timer-display');
+                        if (display) {{
+                            display.innerText = timeStr;
+                        }}
                     }}
-                    setTimeout(updateTimer, 10);
                 }}
-
-                updateTimer();
+                
+                // Use setInterval for consistent updates
+                let timerInterval = setInterval(updateTimer, 10);
+                
+                // Clean up interval on component unmount
+                window.addEventListener('unload', () => clearInterval(timerInterval));
             </script>
             """
             components.html(timer_html, height=60)
 
             # Slide Control 섹션
             st.session_state.slide_number = st.number_input("Slide Number:", min_value=1, value=st.session_state.slide_number, step=1, key="slide_input")
-            if st.button("Record Time", key="record_button", help="Press Enter to record", use_container_width=True):
+            if st.button("Record Time", key="record_button", help="Press to record", use_container_width=True):
                 # 현재 경과 시간 계산
                 current_elapsed_ms = st.session_state.elapsed_time
-                if st.session_state.timer_running:
+                if st.session_state.timer_running and st.session_state.timer_start:
                     current_elapsed_ms += (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
+                
+                # start_time 확인 및 기본값 설정
+                if st.session_state.start_time is None:
+                    st.session_state.start_time = datetime.combine(datetime.now().date(), datetime.time(0, 0, 0))
+                
+                # 현재 시간 계산
                 elapsed_seconds = current_elapsed_ms / 1000
                 current_time = st.session_state.start_time + timedelta(seconds=elapsed_seconds)
                 current_time_str = current_time.strftime("%H:%M:%S") + f".{int(current_elapsed_ms % 1000):03d}"
+                
+                # 이전 슬라이드의 시작 시간
                 start_time = st.session_state.last_slide_start_time if st.session_state.last_slide_start_time else st.session_state.start_time.strftime("%H:%M:%S") + ".000"
-                st.session_state.last_slide_start_time = current_time_str
+                
+                # 기록 추가
                 st.session_state.records.append({
                     "slide_number": str(st.session_state.slide_number),
                     "start_time": start_time,
                     "end_time": current_time_str,
                     "notes": ""
                 })
+                
+                # 다음 슬라이드의 시작 시간 및 슬라이드 번호 업데이트
+                st.session_state.last_slide_start_time = current_time_str
                 st.session_state.slide_number += 1
-                st.rerun()
 
             # JSON 저장
             if st.session_state.records:
@@ -241,20 +287,6 @@ def lecture_timer_tab():
                     st.session_state.records = edited_df.to_dict('records')
             else:
                 st.info("표시할 기록이 없습니다.")
-
-        # Enter 키로 Record Time 호출
-        st.markdown("""
-            <script>
-            document.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    const recordButton = document.querySelector('button[kind="primary"][id="record_button"]');
-                    if (recordButton && !recordButton.disabled) {
-                        recordButton.click();
-                    }
-                }
-            });
-            </script>
-        """, unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"강의 타이머 탭에서 오류: {e}")

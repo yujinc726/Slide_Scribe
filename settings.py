@@ -157,6 +157,7 @@ def manage_json_files():
         df,
         num_rows="dynamic",
         use_container_width=True,
+        key=f"json_editor_{selected_lecture}_{selected_json}",
         column_config={
             "slide_number": st.column_config.TextColumn("Slide Number", help="슬라이드 번호"),
             "start_time": st.column_config.TextColumn("Start Time", help="시작 시간"),
@@ -185,7 +186,7 @@ def manage_json_files():
 def settings_tab():
     """Settings 탭 구현"""
     try:
-        st.header("Settings")
+        st.title("Settings")
         
         # 두 개의 탭으로 나누기: 강의 관리와 JSON 파일 관리
         settings_tab1, settings_tab2 = st.tabs(["강의 관리", "JSON 파일 관리"])
