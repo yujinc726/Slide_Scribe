@@ -1,0 +1,222 @@
+import pandas as pd
+import re
+from datetime import datetime
+import streamlit as st
+import io
+import json
+import os
+
+def parse_srt_time(time_str):
+    """SRT 및 CSV 시간 문자열을 초 단위로 변환"""
+    time_str = time_str.replace('.', ',')
+    try:
+        time_obj = datetime.strptime(time_str, "%H:%M:%S,%f")
+        return time_obj.hour * 3600 + time_obj.minute * 60 + time_obj.second + time_obj.microsecond / 1e6
+    except ValueError as e:
+        raise ValueError(f"Invalid time format: {time_str}. Expected HH:MM:SS,fff") from e
+
+def read_srt_file(srt_content):
+    """SRT 파일 내용을 읽고 자막 데이터를 파싱"""
+    subtitles = []
+    blocks = srt_content.strip().split('\n\n')
+    
+    for block in blocks:
+        lines = block.strip().split('\n')
+        if len(lines) < 3:
+            continue
+        index = lines[0]
+        time_range = lines[1]
+        text = ' '.join(lines[2:]).replace('\n', ' ')
+        
+        try:
+            start_time, end_time = re.match(r"(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})", time_range).groups()
+            subtitles.append({
+                'index': index,
+                'start_time': parse_srt_time(start_time),
+                'end_time': parse_srt_time(end_time),
+                'text': text
+            })
+        except (re.error, ValueError):
+            continue
+    
+    return subtitles
+
+def get_available_lectures():
+    """lectures 디렉토리에서 사용 가능한 강의 목록 가져오기"""
+    lectures_dir = "lectures"
+    lectures = []
+    
+    if os.path.exists(lectures_dir):
+        for lecture_name in os.listdir(lectures_dir):
+            lecture_path = os.path.join(lectures_dir, lecture_name)
+            if os.path.isdir(lecture_path):
+                lectures.append(lecture_name)
+    
+    return lectures
+
+def get_json_files_for_lecture(lecture_name):
+    """특정 강의 디렉토리에서 사용 가능한 JSON 파일 목록 가져오기"""
+    lecture_dir = os.path.join("lectures", lecture_name)
+    json_files = []
+    
+    if os.path.exists(lecture_dir):
+        for file_name in os.listdir(lecture_dir):
+            if file_name.endswith('.json'):
+                json_files.append(file_name)
+    
+    return json_files
+
+def load_json_file(json_path):
+    """JSON 파일에서 타이머 기록 로드"""
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        st.error(f"JSON 파일 로드 중 오류: {e}")
+        return []
+
+def process_files(srt_file=None, json_path=None):
+    """JSON과 SRT 파일을 처리하여 슬라이드별로 자막을 합쳐 데이터프레임 반환"""
+    try:
+        # 타이머 기록 읽기 (JSON 파일)
+        if json_path:
+            records = load_json_file(json_path)
+            df = pd.DataFrame(records)
+        else:
+            st.error("타이머 기록(JSON) 필요")
+            return None
+        
+        # SRT 파일 읽기 (Streamlit UploadedFile 처리)
+        srt_content = srt_file.read().decode('utf-8')
+        subtitles = read_srt_file(srt_content)
+        
+        # 출력 데이터 준비
+        output_data = []
+        
+        # 각 슬라이드별로 자막 매핑
+        for _, row in df.iterrows():
+            slide_num = row['slide_number'] if 'slide_number' in df.columns else row['Slide Number']
+            start_time = parse_srt_time(row['start_time'] if 'start_time' in df.columns else row['Start Time'])
+            end_time = parse_srt_time(row['end_time'] if 'end_time' in df.columns else row['End Time'])
+            
+            # 해당 시간 구간에 속하는 자막 텍스트 수집
+            slide_texts = []
+            for subtitle in subtitles:
+                if subtitle['start_time'] >= start_time and subtitle['end_time'] <= end_time:
+                    slide_texts.append(subtitle['text'])
+            
+            # 자막 텍스트를 공백으로 합침
+            combined_text = ' '.join(slide_texts)
+            
+            if combined_text:  # 텍스트가 있는 경우에만 추가
+                output_data.append({
+                    'Slide Number': slide_num,
+                    'Text': combined_text
+                })
+        
+        # 데이터프레임 반환
+        if output_data:
+            return pd.DataFrame(output_data)
+        else:
+            return None
+    
+    except Exception as e:
+        st.error(f"Error processing files: {e}")
+        return None
+
+def srt_parser_tab():
+    """SRT Parser 탭 구현"""
+    try:
+        # 커스텀 CSS로 슬라이드 번호와 코드 블록 스타일 조정
+        st.markdown("""
+            <style>
+            .slide-number {
+                font-size: 20px;
+                font-weight: bold;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            pre, pre code {
+                min-height: 200px !important;  /* 최소 높이 설정 */
+                max-height: 400px !important;  /* 최대 높이 설정, 스크롤 가능 */
+                overflow-y: auto !important;    /* 세로 스크롤 활성화 */
+                background-color: #2d2d2d !important;
+                color: #ffffff !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                font-size: 16px !important;
+                line-height: 2.0 !important;
+                padding: 15px !important;
+                border-radius: 5px !important;
+                margin-bottom: 20px !important;
+                white-space: pre-wrap !important;  /* 줄바꿈 활성화 */
+                word-wrap: break-word !important;  /* 단어 단위 줄바꿈 */
+                overflow-wrap: break-word !important;  /* 긴 단어 줄바꿈 */
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        
+        # 제목
+        st.title("SRT Parser")
+        
+        # 초기화
+        if 'result_df' not in st.session_state:
+            st.session_state.result_df = None
+        
+        # 레이아웃 설정
+        col1, col2 = st.columns([1, 2])  # 좌측: 파일 업로드, 우측: 결과
+        
+        with col1:
+            st.header("File Upload")
+            # SRT 파일 업로드
+            srt_file = st.file_uploader("Upload SRT File (Subtitles)", type=["srt"], key="srt_uploader")
+            
+            # 강의 선택 및 JSON 파일 선택
+            available_lectures = get_available_lectures()
+            if available_lectures:
+                selected_lecture = st.selectbox(
+                    "Select Lecture:",
+                    available_lectures,
+                    key="lecture_selector"
+                )
+                
+                json_files = get_json_files_for_lecture(selected_lecture)
+                if json_files:
+                    selected_json_file = st.selectbox(
+                        "Select JSON File:",
+                        json_files,
+                        key="json_file_selector"
+                    )
+                    json_path = os.path.join("lectures", selected_lecture, selected_json_file)
+                else:
+                    st.warning(f"No JSON files found for lecture: {selected_lecture}")
+                    json_path = None
+            else:
+                st.warning("No lectures found. Save timer results first.")
+                json_path = None
+            
+            # 처리 버튼
+            if st.button("Process Files"):
+                if srt_file is None:
+                    st.error("Please upload an SRT file.")
+                elif json_path is None:
+                    st.error("Please select a JSON file.")
+                else:
+                    with st.spinner("Processing..."):
+                        st.session_state.result_df = process_files(srt_file, json_path)
+        
+        with col2:
+            st.header("Results")
+            if st.session_state.result_df is not None:
+                if not st.session_state.result_df.empty:
+                    for _, row in st.session_state.result_df.iterrows():
+                        st.markdown(f'<div class="slide-number">Slide Number: {row["Slide Number"]}</div>', unsafe_allow_html=True)
+                        # 마크다운 코드 블록으로 텍스트 출력 (문자열 분리)
+                        text_content = row['Text']
+                        markdown_text = f"```text\n{text_content}\n```"
+                        st.markdown(markdown_text)
+                else:
+                    st.warning("No subtitles found for any slides.")
+            else:
+                st.info("Upload SRT and select a JSON file, then click 'Process Files' to see results.")
+    except Exception as e:
+        st.error(f"Error in SRT Parser tab: {e}")
