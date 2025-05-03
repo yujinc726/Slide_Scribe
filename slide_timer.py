@@ -31,14 +31,16 @@ def ensure_directory(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def save_records_to_json(lecture_name, date, records):
+def save_records_to_json(lecture_name, records):
     """타이머 기록을 JSON 파일로 저장"""
     try:
         lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
-        date = date.replace("/", "_").replace("\\", "_")
+        date = datetime.now().strftime("%Y-%m-%d")
+        timestamp = datetime.now().strftime("%H%M%S")  # 24-hour format HHMMSS
         directory = f"lectures/{lecture_name}"
         ensure_directory(directory)
-        file_path = f"{directory}/{date}.json"
+        
+        file_path = f"{directory}/{date}_{timestamp}.json"
         
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(records, f, ensure_ascii=False, indent=2)
@@ -70,7 +72,7 @@ def lecture_timer_tab():
         if 'slide_number' not in st.session_state:
             st.session_state.slide_number = 1
         if 'start_time_value' not in st.session_state:
-            st.session_state.start_time_value = "00:00"
+            st.session_state.start_time_value = "00:00:00"
         if 'notes_input' not in st.session_state:
             st.session_state.notes_input = ""
 
@@ -78,8 +80,6 @@ def lecture_timer_tab():
         left_col, right_col = st.columns([1, 2])
 
         with left_col:
-            # Lecture Information 섹션
-            st.subheader("Lecture Information")
             lecture_name = st.selectbox(
                 "강의 선택",
                 st.session_state.lecture_names if st.session_state.lecture_names else ["강의를 추가해주세요"],
@@ -89,11 +89,7 @@ def lecture_timer_tab():
             if not st.session_state.lecture_names:
                 st.info("Settings 탭에서 강의를 추가해주세요.")
             
-            dates = [(datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
-            date = st.selectbox("날짜", dates, key="date")
-
             # Stopwatch 섹션
-            st.subheader("Timer")
             # Slide Control 섹션
             st.session_state.slide_number = st.number_input("Slide Number:", min_value=1, value=st.session_state.slide_number, step=1, key="slide_input")
             # Start Time 입력 필드 (Pause 상태에서만 편집 가능)
@@ -105,57 +101,6 @@ def lecture_timer_tab():
             )
             # Update start_time_value with user input
             st.session_state.start_time_value = start_time_input
-            
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col1:
-                start_button_label = "Resume" if st.session_state.elapsed_time > 0 and not st.session_state.timer_running else "Start"
-                if st.button(start_button_label, disabled=st.session_state.timer_running, use_container_width=True):
-                    # Start 버튼 클릭 시
-                    try:
-                        start_time_str = start_time_input
-                        new_start_time = datetime.strptime(start_time_str, "%M:%S")
-                        new_start_time = datetime.combine(datetime.now().date(), new_start_time.time())
-                        if new_start_time > datetime.now():
-                            new_start_time -= timedelta(days=1)
-                        
-                        # Check if start_time has changed
-                        current_start_time_str = st.session_state.start_time.strftime("%M:%S") if st.session_state.start_time else "00:00"
-                        if start_time_str != current_start_time_str:
-                            # Reset elapsed_time if start_time is modified
-                            st.session_state.elapsed_time = 0
-                            st.session_state.last_slide_start_time = new_start_time.strftime("%H:%M:%S") + ".000"
-                        
-                        st.session_state.start_time = new_start_time
-                    except ValueError:
-                        st.session_state.start_time = datetime.combine(datetime.now().date(), datetime.time(0, 0, 0))
-                        st.session_state.elapsed_time = 0
-                        st.session_state.last_slide_start_time = st.session_state.start_time.strftime("%H:%M:%S") + ".000"
-                    
-                    # Set timer_running and update timer_start
-                    st.session_state.timer_running = True
-                    st.session_state.timer_start = datetime.now()
-                    
-                    st.rerun()
-            with col2:
-                if st.button("Pause", disabled=not st.session_state.timer_running, use_container_width=True):
-                    st.session_state.timer_running = False
-                    # 현재까지 경과한 시간을 누적
-                    if st.session_state.timer_start:
-                        st.session_state.elapsed_time += (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
-                    st.rerun()
-            with col3:
-                if st.button("Reset", use_container_width=True):
-                    st.session_state.timer_running = False
-                    st.session_state.elapsed_time = 0
-                    st.session_state.start_time = None
-                    st.session_state.timer_start = None
-                    st.session_state.last_slide_start_time = None
-                    st.session_state.records = []
-                    st.session_state.slide_number = 1
-                    # Reset start_time_value instead of start_time_input
-                    st.session_state.start_time_value = "00:00"
-                    st.rerun()
-
             # 타이머 표시
             elapsed_ms = st.session_state.elapsed_time
             if st.session_state.timer_running and st.session_state.timer_start:
@@ -216,10 +161,58 @@ def lecture_timer_tab():
             </script>
             """
             components.html(timer_html, height=60)
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col1:
+                start_button_label = "Resume" if st.session_state.elapsed_time > 0 and not st.session_state.timer_running else "Start"
+                if st.button(start_button_label, disabled=st.session_state.timer_running, use_container_width=True):
+                    # Start 버튼 클릭 시
+                    try:
+                        start_time_str = start_time_input
+                        new_start_time = datetime.strptime(start_time_str, "%H:%M:%S")
+                        new_start_time = datetime.combine(datetime.now().date(), new_start_time.time())
+                        if new_start_time > datetime.now():
+                            new_start_time -= timedelta(days=1)
+                        
+                        # Check if start_time has changed
+                        current_start_time_str = st.session_state.start_time.strftime("%H:%M:%S") if st.session_state.start_time else "00:00:00"
+                        if start_time_str != current_start_time_str:
+                            # Reset elapsed_time if start_time is modified
+                            st.session_state.elapsed_time = 0
+                            st.session_state.last_slide_start_time = new_start_time.strftime("%H:%M:%S") + ".000"
+                        
+                        st.session_state.start_time = new_start_time
+                    except ValueError:
+                        st.session_state.start_time = datetime.combine(datetime.now().date(), datetime.time(0, 0, 0))
+                        st.session_state.elapsed_time = 0
+                        st.session_state.last_slide_start_time = st.session_state.start_time.strftime("%H:%M:%S") + ".000"
+                    
+                    # Set timer_running and update timer_start
+                    st.session_state.timer_running = True
+                    st.session_state.timer_start = datetime.now()
+                    
+                    st.rerun()
+            with col2:
+                if st.button("Pause", disabled=not st.session_state.timer_running, use_container_width=True):
+                    st.session_state.timer_running = False
+                    # 현재까지 경과한 시간을 누적
+                    if st.session_state.timer_start:
+                        st.session_state.elapsed_time += (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
+                    st.rerun()
+            with col3:
+                if st.button("Reset", use_container_width=True):
+                    st.session_state.timer_running = False
+                    st.session_state.elapsed_time = 0
+                    st.session_state.start_time = None
+                    st.session_state.timer_start = None
+                    st.session_state.last_slide_start_time = None
+                    st.session_state.records = []
+                    st.session_state.slide_number = 1
+                    # Reset start_time_value instead of start_time_input
+                    st.session_state.start_time_value = "00:00:00"
+                    st.rerun()
 
             # Note 섹션
             st.text_input("Notes", value="", key="notes")
-            #st.session_state.notes = st.text_input("Notes", value=st.session_state.notes, key="notes")
 
             if st.button("Record Time", key="record_button", help="Press to record", use_container_width=True):
                 # 현재 경과 시간 계산
@@ -259,21 +252,10 @@ def lecture_timer_tab():
                 if st.button("Save to JSON", use_container_width=True):
                     json_file_path = save_records_to_json(
                         lecture_name,
-                        date,
                         st.session_state.records
                     )
                     
                     if json_file_path:
-                        # with open(json_file_path, 'r', encoding='utf-8') as f:
-                        #     json_data = f.read()
-                            
-                        # st.download_button(
-                        #     label="Download JSON",
-                        #     data=json_data,
-                        #     file_name=os.path.basename(json_file_path),
-                        #     mime="application/json",
-                        #     use_container_width=True
-                        # )
                         st.success(f"JSON 파일이 저장되었습니다: {json_file_path}")
 
         with right_col:
