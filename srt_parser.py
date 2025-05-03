@@ -156,7 +156,7 @@ def srt_parser_tab():
         """, unsafe_allow_html=True)
         
         # 제목
-        st.title("SRT Parser")
+        st.header("SRT Parser")
         
         # 초기화
         if 'result_df' not in st.session_state:
@@ -166,7 +166,7 @@ def srt_parser_tab():
         col1, col2 = st.columns([1, 2])  # 좌측: 파일 업로드, 우측: 결과
         
         with col1:
-            st.header("File Upload")
+            st.subheader("File Upload")
             # SRT 파일 업로드
             srt_file = st.file_uploader("Upload SRT File (Subtitles)", type=["srt"], key="srt_uploader")
             
@@ -174,7 +174,7 @@ def srt_parser_tab():
             available_lectures = get_available_lectures()
             if available_lectures:
                 selected_lecture = st.selectbox(
-                    "Select Lecture:",
+                    "강의 선택:",
                     available_lectures,
                     key="lecture_selector"
                 )
@@ -209,7 +209,7 @@ def srt_parser_tab():
             if st.session_state.result_df is not None:
                 if not st.session_state.result_df.empty:
                     for _, row in st.session_state.result_df.iterrows():
-                        st.markdown(f'<div class="slide-number">Slide Number: {row["Slide Number"]}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="slide-number">Slide {row["Slide Number"]}</div>', unsafe_allow_html=True)
                         # 마크다운 코드 블록으로 텍스트 출력 (문자열 분리)
                         text_content = row['Text']
                         markdown_text = f"```text\n{text_content}\n```"
