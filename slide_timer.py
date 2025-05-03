@@ -71,6 +71,8 @@ def lecture_timer_tab():
             st.session_state.slide_number = 1
         if 'start_time_value' not in st.session_state:
             st.session_state.start_time_value = "00:00"
+        if 'notes_input' not in st.session_state:
+            st.session_state.notes_input = ""
 
         # 두 개의 주요 컬럼으로 레이아웃 구성
         left_col, right_col = st.columns([1, 2])
@@ -92,6 +94,8 @@ def lecture_timer_tab():
 
             # Stopwatch 섹션
             st.subheader("Timer")
+            # Slide Control 섹션
+            st.session_state.slide_number = st.number_input("Slide Number:", min_value=1, value=st.session_state.slide_number, step=1, key="slide_input")
             # Start Time 입력 필드 (Pause 상태에서만 편집 가능)
             start_time_input = st.text_input(
                 "Start Time",
@@ -213,8 +217,10 @@ def lecture_timer_tab():
             """
             components.html(timer_html, height=60)
 
-            # Slide Control 섹션
-            st.session_state.slide_number = st.number_input("Slide Number:", min_value=1, value=st.session_state.slide_number, step=1, key="slide_input")
+            # Note 섹션
+            st.text_input("Notes", value="", key="notes")
+            #st.session_state.notes = st.text_input("Notes", value=st.session_state.notes, key="notes")
+
             if st.button("Record Time", key="record_button", help="Press to record", use_container_width=True):
                 # 현재 경과 시간 계산
                 current_elapsed_ms = st.session_state.elapsed_time
@@ -238,12 +244,15 @@ def lecture_timer_tab():
                     "slide_number": str(st.session_state.slide_number),
                     "start_time": start_time,
                     "end_time": current_time_str,
-                    "notes": ""
+                    "notes": st.session_state.notes
                 })
                 
                 # 다음 슬라이드의 시작 시간 및 슬라이드 번호 업데이트
                 st.session_state.last_slide_start_time = current_time_str
                 st.session_state.slide_number += 1
+                st.session_state.notes_input = ""
+                st.session_state["notes_input"] = ""
+                st.rerun()
 
             # JSON 저장
             if st.session_state.records:
@@ -255,16 +264,16 @@ def lecture_timer_tab():
                     )
                     
                     if json_file_path:
-                        with open(json_file_path, 'r', encoding='utf-8') as f:
-                            json_data = f.read()
+                        # with open(json_file_path, 'r', encoding='utf-8') as f:
+                        #     json_data = f.read()
                             
-                        st.download_button(
-                            label="Download JSON",
-                            data=json_data,
-                            file_name=os.path.basename(json_file_path),
-                            mime="application/json",
-                            use_container_width=True
-                        )
+                        # st.download_button(
+                        #     label="Download JSON",
+                        #     data=json_data,
+                        #     file_name=os.path.basename(json_file_path),
+                        #     mime="application/json",
+                        #     use_container_width=True
+                        # )
                         st.success(f"JSON 파일이 저장되었습니다: {json_file_path}")
 
         with right_col:

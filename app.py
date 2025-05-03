@@ -3,10 +3,27 @@ from slide_timer import lecture_timer_tab
 from srt_parser import srt_parser_tab
 from settings import settings_tab
 
+st.set_page_config(
+page_title="Slide Scribe",
+page_icon="📝",
+layout="wide",
+initial_sidebar_state="expanded"
+)
+
+st.markdown("""
+<style>
+    .stTabs [data-baseweb="tab"] {
+        font-size: 60px;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 8px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 def main():
     try:
-        # Streamlit 페이지 설정
-        st.set_page_config(page_title="Slide Scribe", layout="wide")
         
         # 세션 상태 초기화
         if 'result_df' not in st.session_state:
@@ -15,7 +32,7 @@ def main():
             st.session_state.active_tab = "SRT Parser"
         st.title('Slide Scribe')
         # 탭 생성
-        tab1, tab2, tab3 = st.tabs(["Slide Timer", "SRT Parser", "Settings"])
+        tab1, tab2, tab3 = st.tabs(["⏱️ Slide Timer", "📜 SRT Parser", "⚙️ Settings"])
         
         with tab1:
             lecture_timer_tab()
