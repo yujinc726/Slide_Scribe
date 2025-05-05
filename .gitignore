@@ -1,1 +1,2 @@
-timer_logs
+timer_logs/
+__pycache__/
