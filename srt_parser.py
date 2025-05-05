@@ -127,34 +127,6 @@ def process_files(srt_file=None, json_path=None):
 def srt_parser_tab():
     """SRT Parser 탭 구현"""
     try:
-        # 커스텀 CSS로 슬라이드 번호와 코드 블록 스타일 조정
-        st.markdown("""
-            <style>
-            .slide-number {
-                font-size: 20px;
-                font-weight: bold;
-                margin-top: 20px;
-                margin-bottom: 10px;
-            }
-            pre, pre code {
-                min-height: 200px !important;  /* 최소 높이 설정 */
-                max-height: 400px !important;  /* 최대 높이 설정, 스크롤 가능 */
-                overflow-y: auto !important;    /* 세로 스크롤 활성화 */
-                background-color: #2d2d2d !important;
-                color: #ffffff !important;
-                font-family: 'Courier New', Courier, monospace !important;
-                font-size: 16px !important;
-                line-height: 2.0 !important;
-                padding: 15px !important;
-                border-radius: 5px !important;
-                margin-bottom: 20px !important;
-                white-space: pre-wrap !important;  /* 줄바꿈 활성화 */
-                word-wrap: break-word !important;  /* 단어 단위 줄바꿈 */
-                overflow-wrap: break-word !important;  /* 긴 단어 줄바꿈 */
-            }
-            </style>
-        """, unsafe_allow_html=True)
-        
         # 제목
         st.header("SRT Parser")
         
@@ -205,7 +177,7 @@ def srt_parser_tab():
                         st.session_state.result_df = process_files(srt_file, json_path)
         
         with col2:
-            st.header("Results")
+            st.subheader("Results")
             if st.session_state.result_df is not None:
                 if not st.session_state.result_df.empty:
                     for _, row in st.session_state.result_df.iterrows():

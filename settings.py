@@ -186,7 +186,7 @@ def manage_json_files():
 def settings_tab():
     """Settings 탭 구현"""
     try:
-        st.title("Settings")
+        st.header("Settings")
         
         # 두 개의 탭으로 나누기: 강의 관리와 JSON 파일 관리
         settings_tab1, settings_tab2 = st.tabs(["JSON 파일 관리", "강의 목록 관리"])
