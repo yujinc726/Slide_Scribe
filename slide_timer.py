@@ -342,16 +342,15 @@ def lecture_timer_tab():
                 st.rerun()
 
             # JSON 저장
-            if st.session_state.records:
-                if st.button("기록 저장", use_container_width=True):
-                    json_file_path = save_records_to_json(
-                        lecture_name,
-                        st.session_state.records
-                    )
-                    
-                    if json_file_path:
-                        st.success(f"JSON 파일이 저장되었습니다: {json_file_path}")
-                        st.session_state.selected_json_file = json_file_path
+            if st.button("기록 저장", use_container_width=True, disabled=not st.session_state.records):
+                json_file_path = save_records_to_json(
+                    lecture_name,
+                    st.session_state.records
+                )
+                
+                if json_file_path:
+                    st.success(f"JSON 파일이 저장되었습니다: {json_file_path}")
+                    st.session_state.selected_json_file = json_file_path
 
         with right_col:
             # 기록된 시간 표시
