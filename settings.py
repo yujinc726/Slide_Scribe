@@ -70,7 +70,7 @@ def manage_json_files():
     # 강의 선택
     available_lectures = load_lecture_names()
     if not available_lectures:
-        st.warning("등록된 강의가 없습니다.")
+        st.info("등록된 강의가 없습니다.")
         return
     
     selected_lecture = st.selectbox(

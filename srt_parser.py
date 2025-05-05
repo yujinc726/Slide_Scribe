@@ -153,7 +153,7 @@ def srt_parser_tab():
                 st.info(f"'{selected_lecture}'의 JSON 파일을 찾을 수 없습니다.")
                 json_path = None
         else:
-            st.warning("등록된 강의가 없습니다.")
+            st.info("등록된 강의가 없습니다.")
             json_path = None
         
         # 처리 버튼
