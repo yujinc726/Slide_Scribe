@@ -96,7 +96,7 @@ def manage_lectures():
     if st.button("강의 삭제", key="remove_lectures_settings"):
         if selected_lectures:
             for lecture in selected_lectures:
-                lecture_dir = f"lectures/{lecture}"
+                lecture_dir = f"timer_logs/{lecture}"
                 # 디렉토리 삭제
                 if os.path.exists(lecture_dir):
                     try:
@@ -139,7 +139,7 @@ def manage_json_files():
     )
     
     # 파일 경로
-    json_path = os.path.join("lectures", selected_lecture, selected_json)
+    json_path = os.path.join("timer_logs", selected_lecture, selected_json)
     
     # 파일 내용 불러오기
     json_data = load_json_file(json_path)
