@@ -36,7 +36,7 @@ def ensure_directory(directory):
 def save_records_to_json(lecture_name, records):
     """타이머 기록을 JSON 파일로 저장"""
     try:
-        lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
+        #lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
         date = datetime.now().strftime("%Y-%m-%d")
         timestamp = datetime.now().strftime("%H%M%S")  # 24-hour format HHMMSS
         directory = f"timer_logs/{lecture_name}"
@@ -62,7 +62,7 @@ def load_records_from_json(file_path):
 
 def get_existing_json_files(lecture_name):
     """강의에 해당하는 기존 JSON 파일 목록 반환"""
-    lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
+    #lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
     directory = f"timer_logs/{lecture_name}"
     if os.path.exists(directory):
         json_files = glob.glob(f"{directory}/*.json")
