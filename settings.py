@@ -76,7 +76,8 @@ def manage_json_files():
     selected_lecture = st.selectbox(
         "강의 선택",
         available_lectures,
-        key="lecture_selector_json"
+        key="lecture_selector_json",
+        placeholder='강의 선택'
     )
     
     # 파일 업로더 키 초기화
@@ -207,7 +208,7 @@ def manage_lectures():
     """강의 이름 관리 기능 구현"""
     st.subheader("강의 목록 관리")
     
-    new_lecture = st.text_input("강의 추가", key="new_lecture_input_settings", placeholder='강의명 입력')
+    new_lecture = st.text_input("강의 추가", key="new_lecture_input_settings", placeholder="강의명 입력")
     if st.button("강의 추가", key="add_lecture_settings"):
         if new_lecture.strip():
             if new_lecture not in st.session_state.lecture_names:
@@ -215,6 +216,7 @@ def manage_lectures():
                 save_lecture_names(st.session_state.lecture_names)
                 # 디렉토리 생성
                 ensure_directory(f"timer_logs/{new_lecture}")
+                st.rerun()
                 st.success(f"강의가 추가되었습니다: {new_lecture}")
             else:
                 st.warning("이미 존재하는 강의 이름입니다.")
@@ -229,7 +231,8 @@ def manage_lectures():
             "강의 삭제",
             st.session_state.lecture_names,
             default=[],
-            key="lecture_list_settings"
+            key="lecture_list_settings",
+            placeholder="삭제할 강의 선택"
         )
     else:
         st.info("등록된 강의가 없습니다.")
