@@ -157,7 +157,7 @@ def srt_parser_tab():
             json_path = None
         
         # 처리 버튼
-        if st.button("SRT Parse"):
+        if st.button("Parse SRT"):
             if srt_file is None:
                 st.error("SRT 파일을 업로드 해주세요.")
             elif json_path is None:
