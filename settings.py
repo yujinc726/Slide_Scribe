@@ -63,9 +63,9 @@ def save_json_file(json_path, data):
 
 def manage_lectures():
     """강의 이름 관리 기능 구현"""
-    st.subheader("강의 관리")
+    st.subheader("강의 목록 관리")
     
-    new_lecture = st.text_input("강의추가", key="new_lecture_input_settings")
+    new_lecture = st.text_input("강의 추가", key="new_lecture_input_settings")
     if st.button("강의 추가", key="add_lecture_settings"):
         if new_lecture.strip():
             if new_lecture not in st.session_state.lecture_names:
@@ -93,7 +93,7 @@ def manage_lectures():
     else:
         st.info("등록된 강의가 없습니다. 아래에서 새로운 강의를 추가하세요.")
         selected_lectures = []
-    if st.button("선택한 강의 삭제", key="remove_lectures_settings"):
+    if st.button("강의 삭제", key="remove_lectures_settings"):
         if selected_lectures:
             for lecture in selected_lectures:
                 lecture_dir = f"lectures/{lecture}"
@@ -189,13 +189,13 @@ def settings_tab():
         st.title("Settings")
         
         # 두 개의 탭으로 나누기: 강의 관리와 JSON 파일 관리
-        settings_tab1, settings_tab2 = st.tabs(["강의 관리", "JSON 파일 관리"])
+        settings_tab1, settings_tab2 = st.tabs(["JSON 파일 관리", "강의 목록 관리"])
         
         with settings_tab1:
-            manage_lectures()
+            manage_json_files()
         
         with settings_tab2:
-            manage_json_files()
+            manage_lectures()
             
     except Exception as e:
         st.error(f"설정 탭에서 오류: {e}") 
