@@ -53,7 +53,7 @@ def main():
         if 'active_tab' not in st.session_state:
             st.session_state.active_tab = "SRT Parser"
         st.title('Slide Scribe')
-        st.markdown('Made by 차유진')
+        st.markdown('Made by 차유진.')
         # 탭 생성
         tab1, tab2, tab3 = st.tabs(["⏱️ Slide Timer", "📜 SRT Parser", "⚙️ Settings"])
         
