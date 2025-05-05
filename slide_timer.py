@@ -91,7 +91,7 @@ def lecture_timer_tab():
     if 'slide_number' not in st.session_state:
         st.session_state.slide_number = 1
     if 'start_time_value' not in st.session_state:
-        st.session_state.start_time_value = "00:00:00"
+        st.session_state.start_time_value = "00:00:00.000"
     if 'notes_input' not in st.session_state:
         st.session_state.notes_input = ""
     if 'selected_json_file' not in st.session_state:
@@ -104,7 +104,8 @@ def lecture_timer_tab():
         lecture_name = st.selectbox(
             "강의 선택",
             st.session_state.lecture_names,
-            key="lecture_name"
+            key="lecture_name",
+            disabled=st.session_state.timer_running
         )
         
         if not st.session_state.lecture_names:
@@ -117,7 +118,8 @@ def lecture_timer_tab():
             "기록 선택",
             json_options,
             key="json_file_select",
-            on_change=lambda: load_selected_json(json_files, json_options)
+            on_change=lambda: load_selected_json(json_files, json_options),
+            disabled=st.session_state.timer_running
         )
 
         def load_selected_json(json_files, json_options):
@@ -129,7 +131,7 @@ def lecture_timer_tab():
                 st.session_state.last_slide_start_time = None
                 st.session_state.elapsed_time = 0
                 st.session_state.start_time = None
-                st.session_state.start_time_value = "00:00:00"
+                st.session_state.start_time_value = "00:00:00.000"
                 st.session_state.selected_json_file = None
             else:
                 file_path = json_files[selected_index - 1]
@@ -145,15 +147,15 @@ def lecture_timer_tab():
                     st.session_state.last_slide_start_time = last_record["end_time"]
                     # 시작 시간 설정
                     try:
-                        start_time_str = records[0]["start_time"].split(".")[0]
-                        st.session_state.start_time = datetime.strptime(start_time_str, "%H:%M:%S")
+                        start_time_str = records[-1]["end_time"]
+                        st.session_state.start_time = datetime.strptime(start_time_str, "%H:%M:%S.%f")
                         st.session_state.start_time_value = start_time_str
                         # 경과 시간 계산 (마지막 종료 시간 - 시작 시간)
-                        last_end_time = datetime.strptime(last_record["end_time"].split(".")[0], "%H:%M:%S")
+                        last_end_time = datetime.strptime(last_record["end_time"], "%H:%M:%S.%f")
                         st.session_state.elapsed_time = (last_end_time - st.session_state.start_time).total_seconds() * 1000
                     except ValueError:
                         st.session_state.start_time = None
-                        st.session_state.start_time_value = "00:00:00"
+                        st.session_state.start_time_value = "00:00:00.000"
                         st.session_state.elapsed_time = 0
                 else:
                     st.session_state.records = []
@@ -161,7 +163,7 @@ def lecture_timer_tab():
                     st.session_state.last_slide_start_time = None
                     st.session_state.elapsed_time = 0
                     st.session_state.start_time = None
-                    st.session_state.start_time_value = "00:00:00"
+                    st.session_state.start_time_value = "00:00:00.000"
 
         # Stopwatch 섹션
         # Slide Control 섹션
@@ -182,7 +184,7 @@ def lecture_timer_tab():
         elapsed_seconds = elapsed_ms / 1000
         if st.session_state.start_time:
             absolute_time = st.session_state.start_time + timedelta(seconds=elapsed_seconds)
-            initial_time = absolute_time.strftime("%H:%M:%S") + f".{int(elapsed_ms % 1000):03d}"
+            initial_time = absolute_time.strftime("%H:%M:%S.%f")[:-3]
         else:
             hours = int(elapsed_seconds // 3600)
             minutes = int((elapsed_seconds % 3600) // 60)
@@ -196,7 +198,8 @@ def lecture_timer_tab():
             start_time_ms = (
                 st.session_state.start_time.hour * 3600 +
                 st.session_state.start_time.minute * 60 +
-                st.session_state.start_time.second
+                st.session_state.start_time.second +
+                st.session_state.start_time.microsecond / 1000000
             ) * 1000
         
         timer_html = f"""
@@ -261,23 +264,23 @@ def lecture_timer_tab():
                 # Start 버튼 클릭 시
                 try:
                     start_time_str = start_time_input
-                    new_start_time = datetime.strptime(start_time_str, "%H:%M:%S")
+                    new_start_time = datetime.strptime(start_time_str, "%H:%M:%S.%f")
                     new_start_time = datetime.combine(datetime.now().date(), new_start_time.time())
                     if new_start_time > datetime.now():
                         new_start_time -= timedelta(days=1)
                     
                     # Check if start_time has changed
-                    current_start_time_str = st.session_state.start_time.strftime("%H:%M:%S") if st.session_state.start_time else "00:00:00"
+                    current_start_time_str = st.session_state.start_time.strftime("%H:%M:%S.%f")[:-3] if st.session_state.start_time else "00:00:00.000"
                     if start_time_str != current_start_time_str:
                         # Reset elapsed_time if start_time is modified
                         st.session_state.elapsed_time = 0
-                        st.session_state.last_slide_start_time = new_start_time.strftime("%H:%M:%S") + ".000"
+                        st.session_state.last_slide_start_time = new_start_time.strftime("%H:%M:%S.%f")[:-3]
                     
                     st.session_state.start_time = new_start_time
                 except ValueError:
                     st.session_state.start_time = datetime.combine(datetime.now().date(), datetime.time(0, 0, 0))
                     st.session_state.elapsed_time = 0
-                    st.session_state.last_slide_start_time = st.session_state.start_time.strftime("%H:%M:%S") + ".000"
+                    st.session_state.last_slide_start_time = st.session_state.start_time.strftime("%H:%M:%S.%f")[:-3]
                 
                 # Set timer_running and update timer_start
                 st.session_state.timer_running = True
@@ -290,6 +293,17 @@ def lecture_timer_tab():
                 # 현재까지 경과한 시간을 누적
                 if st.session_state.timer_start:
                     st.session_state.elapsed_time += (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
+                    # Start Time 입력 칸 업데이트
+                elapsed_seconds = st.session_state.elapsed_time / 1000
+                if st.session_state.start_time:
+                    absolute_time = st.session_state.start_time + timedelta(seconds=elapsed_seconds)
+                    st.session_state.start_time_value = absolute_time.strftime("%H:%M:%S.%f")[:-3]
+                else:
+                    hours = int(elapsed_seconds // 3600)
+                    minutes = int((elapsed_seconds % 3600) // 60)
+                    seconds = int(elapsed_seconds % 60)
+                    milliseconds = int(st.session_state.elapsed_time % 1000)
+                    st.session_state.start_time_value = f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
                 st.rerun()
         with col3:
             if st.button("Reset", use_container_width=True):
@@ -300,7 +314,7 @@ def lecture_timer_tab():
                 st.session_state.last_slide_start_time = None
                 st.session_state.records = []
                 st.session_state.slide_number = 1
-                st.session_state.start_time_value = "00:00:00"
+                st.session_state.start_time_value = "00:00:00.000"
                 st.session_state.selected_json_file = None
                 st.rerun()
 
@@ -320,10 +334,10 @@ def lecture_timer_tab():
             # 현재 시간 계산
             elapsed_seconds = current_elapsed_ms / 1000
             current_time = st.session_state.start_time + timedelta(seconds=elapsed_seconds)
-            current_time_str = current_time.strftime("%H:%M:%S") + f".{int(current_elapsed_ms % 1000):03d}"
+            current_time_str = current_time.strftime("%H:%M:%S.%f")[:-3]
             
             # 이전 슬라이드의 시작 시간
-            start_time = st.session_state.last_slide_start_time if st.session_state.last_slide_start_time else st.session_state.start_time.strftime("%H:%M:%S") + ".000"
+            start_time = st.session_state.last_slide_start_time if st.session_state.last_slide_start_time else st.session_state.start_time.strftime("%H:%M:%S.%f")[:-3]
             
             # 기록 추가
             st.session_state.records.append({
