@@ -32,11 +32,11 @@ def ensure_directory(directory):
 
 def get_json_files_for_lecture(lecture_name):
     """특정 강의 디렉토리에서 사용 가능한 JSON 파일 목록 가져오기"""
-    lecture_dir = os.path.join("lectures", lecture_name)
+    timer_logs_dir = os.path.join("timer_logs", lecture_name)
     json_files = []
     
-    if os.path.exists(lecture_dir):
-        for file_name in os.listdir(lecture_dir):
+    if os.path.exists(timer_logs_dir):
+        for file_name in os.listdir(timer_logs_dir):
             if file_name.endswith('.json'):
                 json_files.append(file_name)
     
@@ -72,7 +72,7 @@ def manage_lectures():
                 st.session_state.lecture_names.append(new_lecture)
                 save_lecture_names(st.session_state.lecture_names)
                 # 디렉토리 생성
-                ensure_directory(f"lectures/{new_lecture}")
+                ensure_directory(f"timer_logs/{new_lecture}")
                 st.success(f"강의가 추가되었습니다: {new_lecture}")
                 st.rerun()
             else:

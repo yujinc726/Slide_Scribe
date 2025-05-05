@@ -43,12 +43,12 @@ def read_srt_file(srt_content):
 
 def get_available_lectures():
     """lectures 디렉토리에서 사용 가능한 강의 목록 가져오기"""
-    lectures_dir = "lectures"
+    timer_logs_dir = "timer_logs"
     lectures = []
     
-    if os.path.exists(lectures_dir):
-        for lecture_name in os.listdir(lectures_dir):
-            lecture_path = os.path.join(lectures_dir, lecture_name)
+    if os.path.exists(timer_logs_dir):
+        for lecture_name in os.listdir(timer_logs_dir):
+            lecture_path = os.path.join(timer_logs_dir, lecture_name)
             if os.path.isdir(lecture_path):
                 lectures.append(lecture_name)
     
@@ -56,11 +56,11 @@ def get_available_lectures():
 
 def get_json_files_for_lecture(lecture_name):
     """특정 강의 디렉토리에서 사용 가능한 JSON 파일 목록 가져오기"""
-    lecture_dir = os.path.join("lectures", lecture_name)
+    timer_logs_dir = os.path.join("timer_logs", lecture_name)
     json_files = []
     
-    if os.path.exists(lecture_dir):
-        for file_name in os.listdir(lecture_dir):
+    if os.path.exists(timer_logs_dir):
+        for file_name in os.listdir(timer_logs_dir):
             if file_name.endswith('.json'):
                 json_files.append(file_name)
     
@@ -158,7 +158,7 @@ def srt_parser_tab():
                         json_files,
                         key="json_file_selector"
                     )
-                    json_path = os.path.join("lectures", selected_lecture, selected_json_file)
+                    json_path = os.path.join("timer_logs", selected_lecture, selected_json_file)
                 else:
                     st.warning(f"No JSON files found for lecture: {selected_lecture}")
                     json_path = None

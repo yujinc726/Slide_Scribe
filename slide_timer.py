@@ -38,7 +38,7 @@ def save_records_to_json(lecture_name, records):
         lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
         date = datetime.now().strftime("%Y-%m-%d")
         timestamp = datetime.now().strftime("%H%M%S")  # 24-hour format HHMMSS
-        directory = f"lectures/{lecture_name}"
+        directory = f"timer_logs/{lecture_name}"
         ensure_directory(directory)
         
         file_path = f"{directory}/{date}_{timestamp}.json"
@@ -62,7 +62,7 @@ def load_records_from_json(file_path):
 def get_existing_json_files(lecture_name):
     """강의에 해당하는 기존 JSON 파일 목록 반환"""
     lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
-    directory = f"lectures/{lecture_name}"
+    directory = f"timer_logs/{lecture_name}"
     if os.path.exists(directory):
         json_files = glob.glob(f"{directory}/*.json")
         return sorted(json_files, reverse=True)  # 최신 파일이 먼저 오도록 정렬
