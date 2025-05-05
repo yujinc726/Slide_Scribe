@@ -121,7 +121,7 @@ def manage_json_files():
                     with open(upload_path, 'w', encoding='utf-8') as f:
                         json.dump(json_data, f, ensure_ascii=False, indent=2)
                     # 성공 메시지 저장
-                    st.session_state[f"upload_success_{selected_lecture}"] = f"{uploaded_file_info['name']} 파일이 저장되었습니다."
+                    st.session_state[f"upload_success_{selected_lecture}"] = f"{uploaded_file_info['name']} 파일을 불러왔습니다."
                     # 업로드 상태 초기화 및 파일 업로더 리셋
                     st.session_state.pop(f"uploaded_file_{selected_lecture}", None)
                     st.session_state[f"uploader_key_{selected_lecture}"] += 1
