@@ -17,7 +17,7 @@ st.markdown("""
         border-radius: 8px;
     }
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-        font-size: 20px;        
+        font-size: 20px;
     }
     .slide-number {
         font-size: 24px;

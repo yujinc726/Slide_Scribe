@@ -72,7 +72,7 @@ def get_existing_json_files(lecture_name):
 def lecture_timer_tab():
     """Slide Timer 탭 구현"""
     try:
-        st.header("Slide Timer")
+        #st.header("Slide Timer")
 
         # 세션 상태 초기화
         if 'lecture_names' not in st.session_state:
@@ -308,7 +308,7 @@ def lecture_timer_tab():
             # Note 섹션
             st.text_input("Notes", value="", key="notes")
 
-            if st.button("Record Time", key="record_button", help="Press to record", type='primary', use_container_width=True, disabled=not(lecture_name)):
+            if st.button("Record Time", key="record_button", help="Press to record", type='primary', use_container_width=True, disabled=not lecture_name):
                 # 현재 경과 시간 계산
                 current_elapsed_ms = st.session_state.elapsed_time
                 if st.session_state.timer_running and st.session_state.timer_start:

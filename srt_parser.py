@@ -127,7 +127,7 @@ def srt_parser_tab():
     """SRT Parser 탭 구현"""
     try:
         # 제목
-        st.header("SRT Parser")
+        #st.header("SRT Parser")
         
         # 초기화
         if 'result_df' not in st.session_state:
