@@ -166,7 +166,7 @@ def lecture_timer_tab():
 
             # Stopwatch 섹션
             # Slide Control 섹션
-            st.session_state.slide_number = st.number_input("Slide Number:", min_value=1, value=st.session_state.slide_number, step=1, key="slide_input")
+            st.session_state.slide_number = st.number_input("Slide Number", min_value=1, value=st.session_state.slide_number, step=1, key="slide_input")
             # Start Time 입력 필드 (Pause 상태에서만 편집 가능)
             start_time_input = st.text_input(
                 "Start Time",
@@ -289,7 +289,7 @@ def lecture_timer_tab():
             # Note 섹션
             st.text_input("Notes", value="", key="notes")
 
-            if st.button("Record Time", key="record_button", help="Press to record", use_container_width=True):
+            if st.button("Record Time", key="record_button", help="Press to record", use_container_width=True, disabled=not(lecture_name)):
                 # 현재 경과 시간 계산
                 current_elapsed_ms = st.session_state.elapsed_time
                 if st.session_state.timer_running and st.session_state.timer_start:
