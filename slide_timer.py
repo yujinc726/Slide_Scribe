@@ -7,16 +7,17 @@ import streamlit.components.v1 as components
 import glob
 
 def load_lecture_names():
-    """lecture_names.json에서 강의 이름목록 로드"""
-    lecture_names_file = "lecture_names.json"
-    try:
-        if os.path.exists(lecture_names_file):
-            with open(lecture_names_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return []
-    except Exception as e:
-        st.error(f"강의 이름 로드 중 오류: {e}")
-        return []
+    """lectures 디렉토리에서 사용 가능한 강의 목록 가져오기"""
+    timer_logs_dir = "timer_logs"
+    lectures = []
+    
+    if os.path.exists(timer_logs_dir):
+        for lecture_name in os.listdir(timer_logs_dir):
+            lecture_path = os.path.join(timer_logs_dir, lecture_name)
+            if os.path.isdir(lecture_path):
+                lectures.append(lecture_name)
+    
+    return lectures
 
 def save_lecture_names(lecture_names):
     """lecture_names.json에 강의 이름 목록 저장"""
@@ -103,7 +104,7 @@ def lecture_timer_tab():
         with left_col:
             lecture_name = st.selectbox(
                 "강의 선택",
-                st.session_state.lecture_names if st.session_state.lecture_names else ["강의를 추가해주세요"],
+                st.session_state.lecture_names,
                 key="lecture_name"
             )
             

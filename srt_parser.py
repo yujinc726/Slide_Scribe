@@ -160,7 +160,7 @@ def srt_parser_tab():
                     )
                     json_path = os.path.join("timer_logs", selected_lecture, selected_json_file)
                 else:
-                    st.warning(f"No JSON files found for lecture: {selected_lecture}")
+                    st.info(f"No JSON files found for lecture: {selected_lecture}")
                     json_path = None
             else:
                 st.warning("No lectures found. Save timer results first.")

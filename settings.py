@@ -6,16 +6,17 @@ import pandas as pd
 import time
 
 def load_lecture_names():
-    """lecture_names.json에서 강의 이름목록 로드"""
-    lecture_names_file = "lecture_names.json"
-    try:
-        if os.path.exists(lecture_names_file):
-            with open(lecture_names_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return []
-    except Exception as e:
-        st.error(f"강의 이름 로드 중 오류: {e}")
-        return []
+    """lectures 디렉토리에서 사용 가능한 강의 목록 가져오기"""
+    timer_logs_dir = "timer_logs"
+    lectures = []
+    
+    if os.path.exists(timer_logs_dir):
+        for lecture_name in os.listdir(timer_logs_dir):
+            lecture_path = os.path.join(timer_logs_dir, lecture_name)
+            if os.path.isdir(lecture_path):
+                lectures.append(lecture_name)
+    
+    return lectures
 
 def save_lecture_names(lecture_names):
     """lecture_names.json에 강의 이름 목록 저장"""
@@ -75,7 +76,6 @@ def manage_lectures():
                 # 디렉토리 생성
                 ensure_directory(f"timer_logs/{new_lecture}")
                 st.success(f"강의가 추가되었습니다: {new_lecture}")
-                st.rerun()
             else:
                 st.warning("이미 존재하는 강의 이름입니다.")
         else:
@@ -92,7 +92,7 @@ def manage_lectures():
             key="lecture_list_settings"
         )
     else:
-        st.info("등록된 강의가 없습니다. 아래에서 새로운 강의를 추가하세요.")
+        st.info("등록된 강의가 없습니다.")
         selected_lectures = []
     if st.button("강의 삭제", key="remove_lectures_settings"):
         if selected_lectures:
@@ -149,7 +149,7 @@ def manage_json_files():
         # 파일 업로더가 비어 있으면 세션 상태 초기화
         st.session_state.pop(f"uploaded_file_{selected_lecture}", None)
     
-    # 업로드된 파일 저장 버튼 (항상 표시, 파일 없으면 비활성화)
+    # 업로드된 파일 저장 버튼
     if st.button(
         "업로드된 파일 저장",
         key=f"save_uploaded_file_{selected_lecture}",
@@ -170,9 +170,6 @@ def manage_json_files():
             # 업로드 상태 초기화 및 파일 업로더 리셋
             st.session_state.pop(f"uploaded_file_{selected_lecture}", None)
             st.session_state[f"uploader_key_{selected_lecture}"] += 1
-            # 잠시 대기 후 리런
-            time.sleep(0.5)
-            st.rerun()
         except json.JSONDecodeError:
             st.error("업로드된 파일이 유효한 JSON 형식이 아닙니다.")
         except Exception as e:
@@ -187,15 +184,19 @@ def manage_json_files():
     
     # JSON 파일 목록
     json_files = get_json_files_for_lecture(selected_lecture)
-    # if not json_files:
-    #     st.info(f"'{selected_lecture}' 강의에 저장된 JSON 파일이 없습니다.")
-    #     return
+    if not json_files:
+        st.info(f"'{selected_lecture}' 강의에 저장된 JSON 파일이 없습니다.")
+        return
     
     selected_json = st.selectbox(
         "JSON 파일 선택:",
         json_files,
         key="json_selector"
     )
+    
+    if not selected_json:
+        st.warning("JSON 파일을 선택해주세요.")
+        return
     
     # 파일 경로
     json_path = os.path.join("timer_logs", selected_lecture, selected_json)
