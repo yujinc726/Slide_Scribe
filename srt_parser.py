@@ -138,26 +138,36 @@ def srt_parser_tab():
             selected_lecture = st.selectbox(
                 "강의 선택",
                 available_lectures,
-                key="lecture_selector"
+                key="lecture_selector",
+                index=None,
+                placeholder="강의를 선택해주세요"
             )
             
-            json_files = get_json_files_for_lecture(selected_lecture)
+            if selected_lecture:
+                json_files = get_json_files_for_lecture(selected_lecture)
+                if not json_files:
+                    st.info("타이머 기록이 없습니다.")
+            else:
+                json_files = None
             if json_files:
                 selected_json_file = st.selectbox(
                     "기록 선택",
                     json_files,
-                    key="json_file_selector"
+                    key="json_file_selector",
+                    index=None,
+                    placeholder="기록을 선택해주세요",
+                    disabled=not selected_lecture
                 )
-                json_path = os.path.join("timer_logs", selected_lecture, selected_json_file)
+                if selected_json_file:
+                    json_path = os.path.join("timer_logs", selected_lecture, selected_json_file)
             else:
-                st.info(f"'{selected_lecture}'의 JSON 파일을 찾을 수 없습니다.")
                 json_path = None
         else:
             st.info("등록된 강의가 없습니다.")
             json_path = None
         
         # 처리 버튼
-        if st.button("Parse SRT"):
+        if st.button("Parse SRT", type='primary', use_container_width=True, disabled=not (srt_file and json_path)):
             if srt_file is None:
                 st.error("SRT 파일을 업로드 해주세요.")
             elif json_path is None:
@@ -167,7 +177,7 @@ def srt_parser_tab():
                     st.session_state.result_df = process_files(srt_file, json_path)
     
     with col2:
-        st.subheader("Results")
+        st.subheader("Parsed SRT")
         if st.session_state.result_df is not None:
             if not st.session_state.result_df.empty:
                 for _, row in st.session_state.result_df.iterrows():
