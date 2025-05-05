@@ -106,7 +106,7 @@ def lecture_timer_tab():
             st.session_state.lecture_names,
             key="lecture_name",
             index=None,
-            placeholder="강의를 선택해주세요.",
+            placeholder="강의를 선택해주세요",
             disabled=st.session_state.timer_running
         )
         
