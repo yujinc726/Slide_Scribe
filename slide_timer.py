@@ -201,7 +201,12 @@ def lecture_timer_tab():
                 ) * 1000
             
             timer_html = f"""
-            <div id="timer-display" style="font-size: 18px; font-weight: bold; padding: 10px; border: 1px solid #ddd; border-radius: 5px; text-align: center;">{initial_time}</div>
+            <div id="timer-display" style="font-size: 18px; font-weight: bold; padding: 10px; border: 1px solid #ddd; border-radius: 5px; text-align: center; color: #000;">{initial_time}</div>
+            <style>
+                [data-theme="dark"] #timer-display {{
+                    color: #fff !important;
+                }}
+            </style>
             <script>
                 let timerRunning = {str(st.session_state.timer_running).lower()};
                 let startTime = new Date().getTime();
@@ -218,9 +223,9 @@ def lecture_timer_tab():
                         let seconds = Math.floor((totalMs % (1000 * 60)) / 1000);
                         let milliseconds = Math.floor(totalMs % 1000);
                         let timeStr = hours.toString().padStart(2, '0') + ':' +
-                                      minutes.toString().padStart(2, '0') + ':' +
-                                      seconds.toString().padStart(2, '0') + '.' +
-                                      milliseconds.toString().padStart(3, '0');
+                                    minutes.toString().padStart(2, '0') + ':' +
+                                    seconds.toString().padStart(2, '0') + '.' +
+                                    milliseconds.toString().padStart(3, '0');
                         let display = document.getElementById('timer-display');
                         if (display) {{
                             display.innerText = timeStr;
@@ -228,10 +233,8 @@ def lecture_timer_tab():
                     }}
                 }}
                 
-                // Use setInterval for consistent updates
                 let timerInterval = setInterval(updateTimer, 10);
                 
-                // Clean up interval on component unmount
                 window.addEventListener('unload', () => clearInterval(timerInterval));
             </script>
             """
