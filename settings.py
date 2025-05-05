@@ -101,9 +101,9 @@ def manage_json_files():
         # 파일 업로더가 비어 있으면 세션 상태 초기화
         st.session_state.pop(f"uploaded_file_{selected_lecture}", None)
     
-    # 업로드된 파일 저장 버튼
+    # 업로드된 기록 저장 버튼
     if st.button(
-        "업로드된 파일 저장",
+        "업로드된 기록 저장",
         key=f"save_uploaded_file_{selected_lecture}",
         disabled=not st.session_state.get(f"uploaded_file_{selected_lecture}")
     ):
