@@ -254,15 +254,25 @@ def manage_lectures():
 def settings_tab():
     """Settings 탭 구현"""
     try:
-        #st.header("Settings")
+        # #st.header("Settings")
         
-        # 두 개의 탭으로 나누기: 강의 관리와 JSON 파일 관리
-        settings_tab1, settings_tab2 = st.tabs(["JSON 파일 관리", "강의 목록 관리"])
+        # # 두 개의 탭으로 나누기: 강의 관리와 JSON 파일 관리
+        # settings_tab1, settings_tab2 = st.tabs(["JSON 파일 관리", "강의 목록 관리"])
         
-        with settings_tab1:
+        # with settings_tab1:
+        #     manage_json_files()
+        
+        # with settings_tab2:
+        #     manage_lectures()
+        # with st.expander("JSON 파일 관리", expanded=False):
+        #     manage_json_files()
+        # with st.expander("강의 목록 관리", expanded=False):
+        #     manage_lectures()
+
+        with st.container():
             manage_json_files()
-        
-        with settings_tab2:
+        st.divider()
+        with st.container():
             manage_lectures()
             
     except Exception as e:
