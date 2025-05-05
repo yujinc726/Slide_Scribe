@@ -13,13 +13,11 @@ initial_sidebar_state="expanded"
 st.markdown("""
 <style>
     .stTabs [data-baseweb="tab"] {
-        font-size: 60px;
-        font-weight: bold;
         padding: 10px 20px;
         border-radius: 8px;
     }
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-        font-size: 24px;        
+        font-size: 20px;        
     }
     .slide-number {
         font-size: 24px;
