@@ -13,7 +13,7 @@ initial_sidebar_state="expanded"
 st.markdown("""
 <style>
     .stTabs [data-baseweb="tab"] {
-        font-size: 60px;
+        font-size: 24px;
         font-weight: bold;
         padding: 10px 20px;
         border-radius: 8px;

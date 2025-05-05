@@ -158,10 +158,11 @@ def manage_json_files():
             data=file_content,
             file_name=selected_json,
             mime="application/json",
-            disabled=not not selected_json
+            use_container_width=True,
+            disabled=not selected_json
         )
     with col2:
-        if st.button("파일 삭제", disabled=not selected_json):
+        if st.button("파일 삭제", use_container_width=True, disabled=not selected_json):
             try:
                 json_path = os.path.join("timer_logs", selected_lecture, selected_json)
                 os.remove(json_path)
