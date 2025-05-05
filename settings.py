@@ -136,10 +136,6 @@ def manage_json_files():
     
     # JSON 파일 목록
     json_files = get_json_files_for_lecture(selected_lecture)
-    # if not json_files:
-    #     st.info(f"'{selected_lecture}' 강의에 저장된 JSON 파일이 없습니다.")
-    #     return
-    
     selected_json = st.selectbox(
         "JSON 파일 선택:",
         json_files,
@@ -150,8 +146,31 @@ def manage_json_files():
         st.warning("JSON 파일을 선택해주세요.")
         return
     
-    # 파일 경로
-    json_path = os.path.join("timer_logs", selected_lecture, selected_json)
+    # 파일 삭제와 다운로드 버튼 (JSON 파일 선택 바로 아래)
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("파일 삭제", use_container_width=True, disabled=not selected_json):
+            try:
+                json_path = os.path.join("timer_logs", selected_lecture, selected_json)
+                os.remove(json_path)
+                st.success(f"{selected_json} 파일이 삭제되었습니다.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"파일 삭제 중 오류: {e}")
+    
+    with col2:
+        # JSON 파일 다운로드
+        json_path = os.path.join("timer_logs", selected_lecture, selected_json)
+        with open(json_path, 'r', encoding='utf-8') as f:
+            file_content = f.read()
+        st.download_button(
+            label="파일 다운로드",
+            data=file_content,
+            file_name=selected_json,
+            mime="application/json",
+            use_container_width=True,
+            disabled=not not selected_json
+        )
     
     # 파일 내용 불러오기
     json_data = load_json_file(json_path)
@@ -178,35 +197,12 @@ def manage_json_files():
         }
     )
     
-    # 버튼 레이아웃
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("변경사항 저장", use_container_width=True):
-            if save_json_file(json_path, edited_df.to_dict('records')):
-                st.success(f"{json_path} 파일이 저장되었습니다.")
-            else:
-                st.error("파일 저장 중 오류가 발생했습니다.")
-    
-    with col2:
-        if st.button("파일 삭제", use_container_width=True):
-            try:
-                os.remove(json_path)
-                st.success(f"{json_path} 파일이 삭제되었습니다.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"파일 삭제 중 오류: {e}")
-    
-    with col3:
-        # JSON 파일 다운로드
-        with open(json_path, 'r', encoding='utf-8') as f:
-            file_content = f.read()
-        st.download_button(
-            label="파일 다운로드",
-            data=file_content,
-            file_name=selected_json,
-            mime="application/json",
-            use_container_width=True
-        )
+    # 변경사항 저장 버튼 (데이터 에디터 아래)
+    if st.button("변경사항 저장", use_container_width=True):
+        if save_json_file(json_path, edited_df.to_dict('records')):
+            st.success(f"{selected_json} 파일이 저장되었습니다.")
+        else:
+            st.error("파일 저장 중 오류가 발생했습니다.")
 
 def manage_lectures():
     """강의 이름 관리 기능 구현"""
