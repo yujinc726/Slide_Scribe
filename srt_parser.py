@@ -145,7 +145,7 @@ def srt_parser_tab():
             available_lectures = get_available_lectures()
             if available_lectures:
                 selected_lecture = st.selectbox(
-                    "강의 선택:",
+                    "강의 선택",
                     available_lectures,
                     key="lecture_selector"
                 )
@@ -153,7 +153,7 @@ def srt_parser_tab():
                 json_files = get_json_files_for_lecture(selected_lecture)
                 if json_files:
                     selected_json_file = st.selectbox(
-                        "Select JSON File:",
+                        "기록 선택",
                         json_files,
                         key="json_file_selector"
                     )
@@ -166,7 +166,7 @@ def srt_parser_tab():
                 json_path = None
             
             # 처리 버튼
-            if st.button("자막 추출"):
+            if st.button("Parse"):
                 if srt_file is None:
                     st.error("SRT 파일을 업로드 해주세요.")
                 elif json_path is None:

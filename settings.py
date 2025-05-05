@@ -74,7 +74,7 @@ def manage_json_files():
         return
     
     selected_lecture = st.selectbox(
-        "강의 선택:",
+        "강의 선택",
         available_lectures,
         key="lecture_selector_json"
     )
@@ -84,7 +84,7 @@ def manage_json_files():
         st.session_state[f"uploader_key_{selected_lecture}"] = 0
     
     # JSON 파일 업로드
-    st.write("JSON 파일 업로드:")
+    st.write("로컬에서 JSON 파일 업로드")
     uploaded_file = st.file_uploader(
         "JSON 파일을 선택하세요",
         type=["json"],
@@ -137,7 +137,7 @@ def manage_json_files():
     # JSON 파일 목록
     json_files = get_json_files_for_lecture(selected_lecture)
     selected_json = st.selectbox(
-        "JSON 파일 선택:",
+        "JSON 파일 선택",
         json_files,
         key="json_selector"
     )
