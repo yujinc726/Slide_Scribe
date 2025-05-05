@@ -201,18 +201,13 @@ def lecture_timer_tab():
                 ) * 1000
             
             timer_html = f"""
-            <div id="timer-display" style="font-size: 18px; font-weight: bold; padding: 10px; border: 1px solid #ddd; border-radius: 5px; text-align: center; color: #000;">{initial_time}</div>
-            <style>
-                [data-theme="dark"] #timer-display {{
-                    color: #fff !important;
-                }}
-            </style>
+            <div id="timer-display" style="font-size: 18px; font-weight: bold; padding: 10px; border: 1px solid #ddd; border-radius: 5px; text-align: center; background-color: var(--background-color, #ffffff); color: var(--text-color, #000000);">{initial_time}</div>
             <script>
                 let timerRunning = {str(st.session_state.timer_running).lower()};
                 let startTime = new Date().getTime();
                 let elapsedTime = {elapsed_ms};
                 let baseTimeMs = {start_time_ms};
-                
+
                 function updateTimer() {{
                     if (timerRunning) {{
                         let now = new Date().getTime();
@@ -232,9 +227,30 @@ def lecture_timer_tab():
                         }}
                     }}
                 }}
-                
+
+                // 테마 감지 및 스타일 업데이트
+                function updateTheme() {{
+                    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    const timerDisplay = document.getElementById('timer-display');
+                    if (timerDisplay) {{
+                        if (isDarkMode) {{
+                            timerDisplay.style.backgroundColor = '#1a1a1a'; // 다크 모드 배경
+                            timerDisplay.style.color = '#ffffff'; // 다크 모드 글씨
+                        }} else {{
+                            timerDisplay.style.backgroundColor = '#ffffff'; // 라이트 모드 배경
+                            timerDisplay.style.color = '#000000'; // 라이트 모드 글씨
+                        }}
+                    }}
+                }}
+
+                // 초기 테마 설정 및 테마 변경 감지
+                updateTheme();
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+
+                // 타이머 업데이트
                 let timerInterval = setInterval(updateTimer, 10);
-                
+
+                // 컴포넌트 언마운트 시 정리
                 window.addEventListener('unload', () => clearInterval(timerInterval));
             </script>
             """
