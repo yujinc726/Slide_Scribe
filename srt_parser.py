@@ -2,7 +2,6 @@ import pandas as pd
 import re
 from datetime import datetime
 import streamlit as st
-import io
 import json
 import os
 
@@ -140,7 +139,7 @@ def srt_parser_tab():
         with col1:
             st.subheader("File Upload")
             # SRT 파일 업로드
-            srt_file = st.file_uploader("Upload SRT File (Subtitles)", type=["srt"], key="srt_uploader")
+            srt_file = st.file_uploader("SRT 파일 업로드", type=["srt"], key="srt_uploader")
             
             # 강의 선택 및 JSON 파일 선택
             available_lectures = get_available_lectures()
@@ -160,18 +159,18 @@ def srt_parser_tab():
                     )
                     json_path = os.path.join("timer_logs", selected_lecture, selected_json_file)
                 else:
-                    st.info(f"No JSON files found for lecture: {selected_lecture}")
+                    st.info(f"'{selected_lecture}'의 JSON 파일을 찾을 수 없습니다.")
                     json_path = None
             else:
-                st.warning("No lectures found. Save timer results first.")
+                st.warning("등록된 강의가 없습니다.")
                 json_path = None
             
             # 처리 버튼
-            if st.button("Process Files"):
+            if st.button("자막 추출"):
                 if srt_file is None:
-                    st.error("Please upload an SRT file.")
+                    st.error("SRT 파일을 업로드 해주세요.")
                 elif json_path is None:
-                    st.error("Please select a JSON file.")
+                    st.error("JSON 파일을 선택해주세요.")
                 else:
                     with st.spinner("Processing..."):
                         st.session_state.result_df = process_files(srt_file, json_path)
@@ -187,8 +186,8 @@ def srt_parser_tab():
                         markdown_text = f"```text\n{text_content}\n```"
                         st.markdown(markdown_text)
                 else:
-                    st.warning("No subtitles found for any slides.")
+                    st.warning("추출된 내용이 없습니다.")
             else:
-                st.info("Upload SRT and select a JSON file, then click 'Process Files' to see results.")
+                st.info("SRT 파일을 업로드하고, JSON 파일을 선택해주세요.")
     except Exception as e:
         st.error(f"Error in SRT Parser tab: {e}")
