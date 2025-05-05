@@ -207,7 +207,7 @@ def manage_lectures():
     """강의 이름 관리 기능 구현"""
     st.subheader("강의 목록 관리")
     
-    new_lecture = st.text_input("강의 추가", key="new_lecture_input_settings")
+    new_lecture = st.text_input("강의 추가", key="new_lecture_input_settings", placeholder='강의명 입력')
     if st.button("강의 추가", key="add_lecture_settings"):
         if new_lecture.strip():
             if new_lecture not in st.session_state.lecture_names:
