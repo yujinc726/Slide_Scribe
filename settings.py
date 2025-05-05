@@ -182,7 +182,7 @@ def manage_json_files():
     df = pd.DataFrame(json_data)
     
     # 데이터 에디터
-    st.write("파일 내용 편집:")
+    st.write("기록 편집")
     edited_df = st.data_editor(
         df,
         num_rows="dynamic",
