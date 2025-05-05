@@ -343,7 +343,7 @@ def lecture_timer_tab():
 
             # JSON 저장
             if st.session_state.records:
-                if st.button("Save to JSON", use_container_width=True):
+                if st.button("기록 저장", use_container_width=True):
                     json_file_path = save_records_to_json(
                         lecture_name,
                         st.session_state.records

@@ -154,7 +154,7 @@ def manage_json_files():
         with open(json_path, 'r', encoding='utf-8') as f:
             file_content = f.read()
         st.download_button(
-            label="파일 다운로드",
+            label="기록 다운로드",
             data=file_content,
             file_name=selected_json,
             mime="application/json",
@@ -162,7 +162,7 @@ def manage_json_files():
             disabled=not selected_json
         )
     with col2:
-        if st.button("파일 삭제", use_container_width=True, disabled=not selected_json):
+        if st.button("기록 삭제", use_container_width=True, disabled=not selected_json):
             try:
                 json_path = os.path.join("timer_logs", selected_lecture, selected_json)
                 os.remove(json_path)
