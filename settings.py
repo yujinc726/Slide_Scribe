@@ -87,7 +87,7 @@ def manage_json_files():
             st.session_state[f"uploader_key_{selected_lecture}"] = 0
         
         # JSON 파일 업로드
-        st.write("로컬에서 JSON 파일 업로드")
+        st.write("기록 불러오기")
         uploaded_file = st.file_uploader(
             "JSON 파일을 선택하세요",
             type=["json"],
@@ -142,69 +142,68 @@ def manage_json_files():
         selected_json = st.selectbox(
             "JSON 파일 선택",
             json_files,
-            key="json_selector"
+            key="json_selector",
+            index=None,
+            placeholder="JSON 파일을 선택해주세요"
         )
         
-        if not selected_json:
-            st.warning("JSON 파일을 선택해주세요.")
-            return
-        
-        # 파일 삭제와 다운로드 버튼 (JSON 파일 선택 바로 아래)
-        col1, col2 = st.columns(2)
-        with col1:
-            # JSON 파일 다운로드
-            json_path = os.path.join("timer_logs", selected_lecture, selected_json)
-            with open(json_path, 'r', encoding='utf-8') as f:
-                file_content = f.read()
-            st.download_button(
-                label="기록 다운로드",
-                data=file_content,
-                file_name=selected_json,
-                mime="application/json",
+        if selected_json:
+            # 파일 삭제와 다운로드 버튼 (JSON 파일 선택 바로 아래)
+            col1, col2 = st.columns(2)
+            with col1:
+                # JSON 파일 다운로드
+                json_path = os.path.join("timer_logs", selected_lecture, selected_json)
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    file_content = f.read()
+                st.download_button(
+                    label="기록 다운로드",
+                    data=file_content,
+                    file_name=selected_json,
+                    mime="application/json",
+                    use_container_width=True,
+                    disabled=not selected_json
+                )
+            with col2:
+                if st.button("기록 삭제", use_container_width=True, disabled=not selected_json):
+                    try:
+                        json_path = os.path.join("timer_logs", selected_lecture, selected_json)
+                        os.remove(json_path)
+                        st.success(f"{selected_json} 파일이 삭제되었습니다.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"파일 삭제 중 오류: {e}")
+            
+            # 파일 내용 불러오기
+            json_data = load_json_file(json_path)
+            
+            if not json_data:
+                st.warning("선택한 파일을 불러올 수 없거나 파일이 비어있습니다.")
+                return
+            
+            # 데이터프레임으로 변환
+            df = pd.DataFrame(json_data)
+            
+            # 데이터 에디터
+            st.write("기록 편집")
+            edited_df = st.data_editor(
+                df,
+                num_rows="dynamic",
                 use_container_width=True,
-                disabled=not selected_json
+                key=f"json_editor_{selected_lecture}_{selected_json}",
+                column_config={
+                    "slide_number": st.column_config.TextColumn("Slide Number", help="슬라이드 번호"),
+                    "start_time": st.column_config.TextColumn("Start Time", help="시작 시간"),
+                    "end_time": st.column_config.TextColumn("End Time", help="종료 시간"),
+                    "notes": st.column_config.TextColumn("Notes", help="메모")
+                }
             )
-        with col2:
-            if st.button("기록 삭제", use_container_width=True, disabled=not selected_json):
-                try:
-                    json_path = os.path.join("timer_logs", selected_lecture, selected_json)
-                    os.remove(json_path)
-                    st.success(f"{selected_json} 파일이 삭제되었습니다.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"파일 삭제 중 오류: {e}")
-        
-        # 파일 내용 불러오기
-        json_data = load_json_file(json_path)
-        
-        if not json_data:
-            st.warning("선택한 파일을 불러올 수 없거나 파일이 비어있습니다.")
-            return
-        
-        # 데이터프레임으로 변환
-        df = pd.DataFrame(json_data)
-        
-        # 데이터 에디터
-        st.write("기록 편집")
-        edited_df = st.data_editor(
-            df,
-            num_rows="dynamic",
-            use_container_width=True,
-            key=f"json_editor_{selected_lecture}_{selected_json}",
-            column_config={
-                "slide_number": st.column_config.TextColumn("Slide Number", help="슬라이드 번호"),
-                "start_time": st.column_config.TextColumn("Start Time", help="시작 시간"),
-                "end_time": st.column_config.TextColumn("End Time", help="종료 시간"),
-                "notes": st.column_config.TextColumn("Notes", help="메모")
-            }
-        )
-        
-        # 변경사항 저장 버튼 (데이터 에디터 아래)
-        if st.button("변경사항 저장", use_container_width=True):
-            if save_json_file(json_path, edited_df.to_dict('records')):
-                st.success(f"{selected_json} 파일이 저장되었습니다.")
-            else:
-                st.error("파일 저장 중 오류가 발생했습니다.")
+            
+            # 변경사항 저장 버튼 (데이터 에디터 아래)
+            if st.button("변경사항 저장", use_container_width=True):
+                if save_json_file(json_path, edited_df.to_dict('records')):
+                    st.success(f"{selected_json} 파일이 저장되었습니다.")
+                else:
+                    st.error("파일 저장 중 오류가 발생했습니다.")
 
 def manage_lectures():
     """강의 이름 관리 기능 구현"""
