@@ -63,54 +63,6 @@ def save_json_file(json_path, data):
         st.error(f"JSON 파일 저장 중 오류: {e}")
         return False
 
-def manage_lectures():
-    """강의 이름 관리 기능 구현"""
-    st.subheader("강의 목록 관리")
-    
-    new_lecture = st.text_input("강의 추가", key="new_lecture_input_settings")
-    if st.button("강의 추가", key="add_lecture_settings"):
-        if new_lecture.strip():
-            if new_lecture not in st.session_state.lecture_names:
-                st.session_state.lecture_names.append(new_lecture)
-                save_lecture_names(st.session_state.lecture_names)
-                # 디렉토리 생성
-                ensure_directory(f"timer_logs/{new_lecture}")
-                st.success(f"강의가 추가되었습니다: {new_lecture}")
-            else:
-                st.warning("이미 존재하는 강의 이름입니다.")
-        else:
-            st.warning("강의 이름을 입력해주세요.")
-    # 초기화
-    if 'lecture_names' not in st.session_state:
-        st.session_state.lecture_names = load_lecture_names()
-    
-    if st.session_state.lecture_names:
-        selected_lectures = st.multiselect(
-            "강의 삭제",
-            st.session_state.lecture_names,
-            default=[],
-            key="lecture_list_settings"
-        )
-    else:
-        st.info("등록된 강의가 없습니다.")
-        selected_lectures = []
-    if st.button("강의 삭제", key="remove_lectures_settings"):
-        if selected_lectures:
-            for lecture in selected_lectures:
-                lecture_dir = f"timer_logs/{lecture}"
-                # 디렉토리 삭제
-                if os.path.exists(lecture_dir):
-                    try:
-                        shutil.rmtree(lecture_dir)
-                    except Exception as e:
-                        st.error(f"디렉토리 삭제 중 오류: {e}")
-                st.session_state.lecture_names.remove(lecture)
-            save_lecture_names(st.session_state.lecture_names)
-            st.success(f"{len(selected_lectures)}개의 강의가 삭제되었습니다.")
-            st.rerun()
-        else:
-            st.warning("삭제할 강의를 선택해주세요.")
-
 def manage_json_files():
     """JSON 파일 관리 기능 구현"""
     st.subheader("JSON 파일 관리")
@@ -184,9 +136,9 @@ def manage_json_files():
     
     # JSON 파일 목록
     json_files = get_json_files_for_lecture(selected_lecture)
-    if not json_files:
-        st.info(f"'{selected_lecture}' 강의에 저장된 JSON 파일이 없습니다.")
-        return
+    # if not json_files:
+    #     st.info(f"'{selected_lecture}' 강의에 저장된 JSON 파일이 없습니다.")
+    #     return
     
     selected_json = st.selectbox(
         "JSON 파일 선택:",
@@ -255,6 +207,54 @@ def manage_json_files():
             mime="application/json",
             use_container_width=True
         )
+
+def manage_lectures():
+    """강의 이름 관리 기능 구현"""
+    st.subheader("강의 목록 관리")
+    
+    new_lecture = st.text_input("강의 추가", key="new_lecture_input_settings")
+    if st.button("강의 추가", key="add_lecture_settings"):
+        if new_lecture.strip():
+            if new_lecture not in st.session_state.lecture_names:
+                st.session_state.lecture_names.append(new_lecture)
+                save_lecture_names(st.session_state.lecture_names)
+                # 디렉토리 생성
+                ensure_directory(f"timer_logs/{new_lecture}")
+                st.success(f"강의가 추가되었습니다: {new_lecture}")
+            else:
+                st.warning("이미 존재하는 강의 이름입니다.")
+        else:
+            st.warning("강의 이름을 입력해주세요.")
+    # 초기화
+    if 'lecture_names' not in st.session_state:
+        st.session_state.lecture_names = load_lecture_names()
+    
+    if st.session_state.lecture_names:
+        selected_lectures = st.multiselect(
+            "강의 삭제",
+            st.session_state.lecture_names,
+            default=[],
+            key="lecture_list_settings"
+        )
+    else:
+        st.info("등록된 강의가 없습니다.")
+        selected_lectures = []
+    if st.button("강의 삭제", key="remove_lectures_settings"):
+        if selected_lectures:
+            for lecture in selected_lectures:
+                lecture_dir = f"timer_logs/{lecture}"
+                # 디렉토리 삭제
+                if os.path.exists(lecture_dir):
+                    try:
+                        shutil.rmtree(lecture_dir)
+                    except Exception as e:
+                        st.error(f"디렉토리 삭제 중 오류: {e}")
+                st.session_state.lecture_names.remove(lecture)
+            save_lecture_names(st.session_state.lecture_names)
+            st.success(f"{len(selected_lectures)}개의 강의가 삭제되었습니다.")
+            st.rerun()
+        else:
+            st.warning("삭제할 강의를 선택해주세요.")
 
 def settings_tab():
     """Settings 탭 구현"""
