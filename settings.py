@@ -187,9 +187,9 @@ def manage_json_files():
     
     # JSON 파일 목록
     json_files = get_json_files_for_lecture(selected_lecture)
-    if not json_files:
-        st.info(f"'{selected_lecture}' 강의에 저장된 JSON 파일이 없습니다.")
-        return
+    # if not json_files:
+    #     st.info(f"'{selected_lecture}' 강의에 저장된 JSON 파일이 없습니다.")
+    #     return
     
     selected_json = st.selectbox(
         "JSON 파일 선택:",
