@@ -77,6 +77,7 @@ def manage_json_files():
         "강의 선택",
         available_lectures,
         key="lecture_selector_json",
+        index=None,
         placeholder='강의 선택'
     )
     
