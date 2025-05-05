@@ -149,16 +149,6 @@ def manage_json_files():
     # 파일 삭제와 다운로드 버튼 (JSON 파일 선택 바로 아래)
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("파일 삭제", use_container_width=True, disabled=not selected_json):
-            try:
-                json_path = os.path.join("timer_logs", selected_lecture, selected_json)
-                os.remove(json_path)
-                st.success(f"{selected_json} 파일이 삭제되었습니다.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"파일 삭제 중 오류: {e}")
-    
-    with col2:
         # JSON 파일 다운로드
         json_path = os.path.join("timer_logs", selected_lecture, selected_json)
         with open(json_path, 'r', encoding='utf-8') as f:
@@ -168,9 +158,17 @@ def manage_json_files():
             data=file_content,
             file_name=selected_json,
             mime="application/json",
-            use_container_width=True,
             disabled=not not selected_json
         )
+    with col2:
+        if st.button("파일 삭제", disabled=not selected_json):
+            try:
+                json_path = os.path.join("timer_logs", selected_lecture, selected_json)
+                os.remove(json_path)
+                st.success(f"{selected_json} 파일이 삭제되었습니다.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"파일 삭제 중 오류: {e}")
     
     # 파일 내용 불러오기
     json_data = load_json_file(json_path)
