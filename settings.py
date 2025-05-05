@@ -270,10 +270,10 @@ def settings_tab():
         #     manage_lectures()
 
         with st.container():
-            manage_json_files()
+            manage_lectures()
         st.divider()
         with st.container():
-            manage_lectures()
+            manage_json_files()
             
     except Exception as e:
         st.error(f"설정 탭에서 오류: {e}")
