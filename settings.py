@@ -13,7 +13,7 @@ from utils import (
     delete_lecture,
     load_records_from_json,
 )
-from github_storage import github_enabled, save_json
+from github_storage import github_enabled, save_json, delete_json
 
 def ensure_directory(directory):
     """디렉토리가 존재하는지 확인하고 없으면 생성"""
@@ -175,7 +175,10 @@ def manage_json_files():
                 with col2:
                     if st.button("기록 삭제", use_container_width=True, disabled=not selected_json):
                         if github_enabled():
-                            st.warning("GitHub 저장소에서 파일 삭제는 지원되지 않습니다.")
+                            from utils import _user_id  # pylint: disable=import-outside-toplevel
+                            if delete_json(_user_id(), selected_lecture, selected_json):
+                                st.success(f"{selected_json} 파일이 GitHub에서 삭제되었습니다.")
+                                st.rerun()
                         else:
                             try:
                                 os.remove(json_ref)

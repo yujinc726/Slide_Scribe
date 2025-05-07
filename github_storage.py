@@ -107,6 +107,41 @@ def save_json(user_id: str, lecture: str, filename: str, data):
     return True
 
 
+# ---------------------------------------------------------------------------
+# Delete helpers
+# ---------------------------------------------------------------------------
+
+
+def delete_json(user_id: str, lecture: str, filename: str) -> bool:
+    """Delete a JSON file from GitHub.
+
+    Parameters
+    ----------
+    user_id : str
+        Current user id.
+    lecture : str
+        Lecture name (directory under timer_logs/<user_id>/).
+    filename : str
+        JSON file name to delete.
+    Returns
+    -------
+    bool
+        ``True`` if deletion succeeded, ``False`` otherwise.
+    """
+
+    repo = _get_repo()
+    if repo is None:
+        return False
+
+    path = f"{_user_base_dir(user_id)}/{lecture}/{filename}"
+    try:
+        file_content = repo.get_contents(path)
+        repo.delete_file(path, f"Delete {path}", file_content.sha)
+        return True
+    except Exception:
+        return False
+
+
 # -------- global file helpers --------
 
 
