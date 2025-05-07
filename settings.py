@@ -223,12 +223,14 @@ def manage_lectures():
     """강의 이름 관리 기능 구현"""
     st.subheader("강의 목록 관리")
     
+    # 현재 강의 목록 (GitHub/로컬)
+    available_lectures = load_lecture_names()
+
     with st.expander("강의 추가"):
         new_lecture = st.text_input("강의 추가", key="new_lecture_input_settings", placeholder="강의명 입력", label_visibility="collapsed")
         if st.button("강의 추가", key="add_lecture_settings"):
             if new_lecture.strip():
-                if new_lecture not in st.session_state.lecture_names:
-                    #st.session_state.lecture_names.append(new_lecture)
+                if new_lecture not in available_lectures:
                     # 디렉토리 생성
                     ensure_directory(os.path.join(get_user_base_dir(), new_lecture))
                     # --- GitHub 디렉토리가 비어있으면 보이지 않는 문제 해결 ---
@@ -252,15 +254,12 @@ def manage_lectures():
                     st.warning("이미 존재하는 강의 이름입니다.")
             else:
                 st.warning("강의 이름을 입력해주세요.")
-        # 초기화
-        if 'lecture_names' not in st.session_state:
-            st.session_state.lecture_names = load_lecture_names()
-    
+
     with st.expander("강의 삭제"):
-        if st.session_state.lecture_names:
+        if available_lectures:
             selected_lectures = st.multiselect(
                 "강의 삭제",
-                st.session_state.lecture_names,
+                available_lectures,
                 default=[],
                 key="lecture_list_settings",
                 placeholder="삭제할 강의 선택",
@@ -274,8 +273,6 @@ def manage_lectures():
                 for lecture in selected_lectures:
                     # 로컬 및 GitHub 모두 삭제
                     delete_lecture(lecture)
-                    if lecture in st.session_state.lecture_names:
-                        st.session_state.lecture_names.remove(lecture)
                 st.success(f"{len(selected_lectures)}개의 강의가 삭제되었습니다.")
                 st.rerun()
             else:

@@ -118,8 +118,6 @@ def lecture_timer_tab():
     #st.header("Slide Timer")
 
     # 세션 상태 초기화
-    if 'lecture_names' not in st.session_state:
-        st.session_state.lecture_names = load_lecture_names()
     if 'timer_running' not in st.session_state:
         st.session_state.timer_running = False
     if 'start_time' not in st.session_state:
@@ -157,7 +155,7 @@ def lecture_timer_tab():
             disabled=st.session_state.timer_running
         )
         
-        if not st.session_state.lecture_names:
+        if not available_lectures:
             st.info("Settings 탭에서 강의를 추가해주세요.")
         
         # 기존 JSON 파일 선택
