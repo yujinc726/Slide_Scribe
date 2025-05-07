@@ -4,20 +4,16 @@ import os
 import shutil
 import pandas as pd
 import time
-from utils import get_user_base_dir
 
-def load_lecture_names():
-    """lectures 디렉토리에서 사용 가능한 강의 목록 가져오기"""
-    timer_logs_dir = get_user_base_dir()
-    lectures = []
-    
-    if os.path.exists(timer_logs_dir):
-        for lecture_name in os.listdir(timer_logs_dir):
-            lecture_path = os.path.join(timer_logs_dir, lecture_name)
-            if os.path.isdir(lecture_path):
-                lectures.append(lecture_name)
-    
-    return lectures
+# unified helpers
+from utils import (
+    get_user_base_dir,
+    load_lecture_names,
+    list_json_files_for_lecture,
+    delete_lecture,
+    load_records_from_json,
+)
+from github_storage import github_enabled
 
 def save_lecture_names(lecture_names):
     """lecture_names.json에 강의 이름 목록 저장"""
@@ -141,8 +137,8 @@ def manage_json_files():
                 st.session_state.pop(f"upload_success_{selected_lecture}", None)
         
         with st.expander("JSON 파일 관리"):
-            # JSON 파일 목록
-            json_files = get_json_files_for_lecture(selected_lecture)
+            # JSON 파일 목록 (로컬 & GitHub 모두 지원)
+            json_files = list_json_files_for_lecture(selected_lecture, names_only=True)
             selected_json = st.selectbox(
                 "JSON 파일 선택",
                 json_files,
@@ -152,33 +148,46 @@ def manage_json_files():
             )
             
             if selected_json:
+                # json reference (local path or GitHub ref)
+                if github_enabled():
+                    json_ref = f"github://{selected_lecture}/{selected_json}"
+                else:
+                    json_ref = os.path.join(get_user_base_dir(), selected_lecture, selected_json)
+
                 # 파일 삭제와 다운로드 버튼 (JSON 파일 선택 바로 아래)
                 col1, col2 = st.columns(2)
                 with col1:
-                    # JSON 파일 다운로드
-                    json_path = os.path.join(get_user_base_dir(), selected_lecture, selected_json)
-                    with open(json_path, 'r', encoding='utf-8') as f:
-                        file_content = f.read()
+                    # JSON 파일 다운로드 (로컬: 직접 읽기, GitHub: utils 로드 후 dump)
+                    if github_enabled():
+                        json_data = load_records_from_json(json_ref)
+                        file_content = json.dumps(json_data, ensure_ascii=False, indent=2)
+                    else:
+                        with open(json_ref, "r", encoding="utf-8") as f:
+                            file_content = f.read()
+
                     st.download_button(
                         label="기록 다운로드",
                         data=file_content,
                         file_name=selected_json,
                         mime="application/json",
                         use_container_width=True,
-                        disabled=not selected_json
+                        disabled=not selected_json,
                     )
+
                 with col2:
                     if st.button("기록 삭제", use_container_width=True, disabled=not selected_json):
-                        try:
-                            json_path = os.path.join(get_user_base_dir(), selected_lecture, selected_json)
-                            os.remove(json_path)
-                            st.success(f"{selected_json} 파일이 삭제되었습니다.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"파일 삭제 중 오류: {e}")
+                        if github_enabled():
+                            st.warning("GitHub 저장소에서 파일 삭제는 지원되지 않습니다.")
+                        else:
+                            try:
+                                os.remove(json_ref)
+                                st.success(f"{selected_json} 파일이 삭제되었습니다.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"파일 삭제 중 오류: {e}")
                 
                 # 파일 내용 불러오기
-                json_data = load_json_file(json_path)
+                json_data = load_records_from_json(json_ref)
                 
                 if not json_data:
                     st.warning("선택한 파일을 불러올 수 없거나 파일이 비어있습니다.")
@@ -204,10 +213,13 @@ def manage_json_files():
                 
                 # 변경사항 저장 버튼 (데이터 에디터 아래)
                 if st.button("변경사항 저장", use_container_width=True):
-                    if save_json_file(json_path, edited_df.to_dict('records')):
-                        st.success(f"{selected_json} 파일이 저장되었습니다.")
+                    if github_enabled():
+                        st.warning("GitHub 저장소의 파일은 이곳에서 직접 수정/저장할 수 없습니다.")
                     else:
-                        st.error("파일 저장 중 오류가 발생했습니다.")
+                        if save_json_file(json_ref, edited_df.to_dict('records')):
+                            st.success(f"{selected_json} 파일이 저장되었습니다.")
+                        else:
+                            st.error("파일 저장 중 오류가 발생했습니다.")
 
 def manage_lectures():
     """강의 이름 관리 기능 구현"""
@@ -222,8 +234,8 @@ def manage_lectures():
                     save_lecture_names(st.session_state.lecture_names)
                     # 디렉토리 생성
                     ensure_directory(os.path.join(get_user_base_dir(), new_lecture))
-                    st.rerun()
                     st.success(f"강의가 추가되었습니다: {new_lecture}")
+                    st.rerun()
                 else:
                     st.warning("이미 존재하는 강의 이름입니다.")
             else:
@@ -248,14 +260,10 @@ def manage_lectures():
         if st.button("강의 삭제", key="remove_lectures_settings"):
             if selected_lectures:
                 for lecture in selected_lectures:
-                    lecture_dir = os.path.join(get_user_base_dir(), lecture)
-                    # 디렉토리 삭제
-                    if os.path.exists(lecture_dir):
-                        try:
-                            shutil.rmtree(lecture_dir)
-                        except Exception as e:
-                            st.error(f"디렉토리 삭제 중 오류: {e}")
-                    st.session_state.lecture_names.remove(lecture)
+                    # 로컬 및 GitHub 모두 삭제
+                    delete_lecture(lecture)
+                    if lecture in st.session_state.lecture_names:
+                        st.session_state.lecture_names.remove(lecture)
                 save_lecture_names(st.session_state.lecture_names)
                 st.success(f"{len(selected_lectures)}개의 강의가 삭제되었습니다.")
                 st.rerun()

@@ -2,9 +2,15 @@ import pandas as pd
 import re
 from datetime import datetime
 import streamlit as st
-import json
 import os
-from utils import get_user_base_dir
+
+# unified helpers
+from utils import (
+    load_lecture_names,
+    list_json_files_for_lecture,
+    load_records_from_json,
+    get_user_base_dir,
+)
 
 def parse_srt_time(time_str):
     """SRT 및 CSV 시간 문자열을 초 단위로 변환"""
@@ -68,20 +74,15 @@ def get_json_files_for_lecture(lecture_name):
     
     return json_files
 
-def load_json_file(json_path):
-    """JSON 파일에서 타이머 기록 로드"""
-    try:
-        with open(json_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception as e:
-        st.error(f"JSON 파일 로드 중 오류: {e}")
-        return []
+def process_files(srt_file=None, json_ref=None):
+    """JSON 타이머 기록과 SRT 자막을 합쳐 슬라이드별 텍스트를 반환."""
 
-def process_files(srt_file=None, json_path=None):
-    """JSON과 SRT 파일을 처리하여 슬라이드별로 자막을 합쳐 데이터프레임 반환"""
-    # 타이머 기록 읽기 (JSON 파일)
-    if json_path:
-        records = load_json_file(json_path)
+    # 타이머 기록 읽기 (로컬 또는 GitHub)
+    if json_ref:
+        records = load_records_from_json(json_ref)
+        if not records:
+            st.error("선택한 JSON 기록을 불러올 수 없습니다.")
+            return None
         df = pd.DataFrame(records)
     else:
         st.error("타이머 기록(JSON) 필요")
@@ -136,48 +137,54 @@ def srt_parser_tab():
         srt_file = st.file_uploader("SRT 파일 업로드", type=["srt"], key="srt_uploader")
         
         # 강의 선택 및 JSON 파일 선택
-        available_lectures = get_available_lectures()
-        if available_lectures:
+        available_lectures = load_lecture_names()
+
+        if not available_lectures:
+            st.info("등록된 강의가 없습니다.")
+            selected_lecture = None
+            json_ref = None
+        else:
             selected_lecture = st.selectbox(
                 "강의 선택",
                 available_lectures,
                 key="lecture_selector",
                 index=None,
-                placeholder="강의를 선택해주세요"
+                placeholder="강의를 선택해주세요",
             )
-            
+
+            # JSON 파일 (타이머 기록) 목록 불러오기
             if selected_lecture:
-                json_files = get_json_files_for_lecture(selected_lecture)
-                if not json_files:
+                json_names = list_json_files_for_lecture(selected_lecture, names_only=True)
+                json_refs = list_json_files_for_lecture(selected_lecture, names_only=False)
+                if not json_names:
                     st.info("타이머 기록이 없습니다.")
+                    json_ref = None
+                else:
+                    selected_name = st.selectbox(
+                        "기록 선택",
+                        json_names,
+                        key="json_file_selector",
+                        index=None,
+                        placeholder="기록을 선택해주세요",
+                        disabled=not selected_lecture,
+                    )
+                    if selected_name:
+                        idx = json_names.index(selected_name)
+                        json_ref = json_refs[idx]
+                    else:
+                        json_ref = None
             else:
-                json_files = None
-            if json_files:
-                selected_json_file = st.selectbox(
-                    "기록 선택",
-                    json_files,
-                    key="json_file_selector",
-                    index=None,
-                    placeholder="기록을 선택해주세요",
-                    disabled=not selected_lecture
-                )
-                if selected_json_file:
-                    json_path = os.path.join(get_user_base_dir(), selected_lecture, selected_json_file)
-            else:
-                json_path = None
-        else:
-            st.info("등록된 강의가 없습니다.")
-            json_path = None
+                json_ref = None
         
         # 처리 버튼
-        if st.button("Parse SRT", type='primary', use_container_width=True, disabled=not (srt_file and json_path)):
+        if st.button("Parse SRT", type='primary', use_container_width=True, disabled=not (srt_file and json_ref)):
             if srt_file is None:
                 st.error("SRT 파일을 업로드 해주세요.")
-            elif json_path is None:
+            elif json_ref is None:
                 st.error("JSON 파일을 선택해주세요.")
             else:
                 with st.spinner("Processing..."):
-                    st.session_state.result_df = process_files(srt_file, json_path)
+                    st.session_state.result_df = process_files(srt_file, json_ref)
     
     with col2:
         st.subheader("Parsed SRT")
