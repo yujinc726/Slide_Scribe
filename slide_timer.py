@@ -127,7 +127,7 @@ def lecture_timer_tab():
             st.info("Settings 탭에서 강의를 추가해주세요.")
         
         # 기존 JSON 파일 선택
-        json_files = list_json_files_for_lecture(lecture_name, names_only=False)
+        json_files = get_existing_json_files(lecture_name)
         json_options = ["새 기록 시작"] + [os.path.basename(f) for f in json_files]
         selected_json = st.selectbox(
             "기록 선택",
@@ -404,3 +404,28 @@ def lecture_timer_tab():
                 st.session_state.records = edited_df.to_dict('records')
         else:
             st.info("표시할 기록이 없습니다.")
+
+# ---------------------------------------------------------------------------
+# Cached JSON file list per lecture (minimize GitHub round-trips)
+# ---------------------------------------------------------------------------
+
+def get_existing_json_files(lecture_name: str):
+    """Return cached JSON reference list for *lecture*.
+
+    Uses `st.session_state` to avoid hitting GitHub on every Streamlit rerun.
+    The cache is automatically refreshed when:
+      • user selects a different lecture (new cache key), or
+      • `save_records_to_json` inserts the new file path after an explicit save.
+    """
+
+    if not lecture_name:
+        return []
+
+    key = f"json_files_{lecture_name}"
+    if key in st.session_state:
+        return st.session_state[key]
+
+    # First time: fetch and cache
+    files = list_json_files_for_lecture(lecture_name, names_only=False)
+    st.session_state[key] = files
+    return files
