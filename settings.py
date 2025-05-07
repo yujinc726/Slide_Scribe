@@ -228,7 +228,7 @@ def manage_lectures():
         if st.button("강의 추가", key="add_lecture_settings"):
             if new_lecture.strip():
                 if new_lecture not in st.session_state.lecture_names:
-                    st.session_state.lecture_names.append(new_lecture)
+                    #st.session_state.lecture_names.append(new_lecture)
                     # 디렉토리 생성
                     ensure_directory(os.path.join(get_user_base_dir(), new_lecture))
                     # --- GitHub 디렉토리가 비어있으면 보이지 않는 문제 해결 ---
