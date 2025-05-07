@@ -1,23 +1,25 @@
 import streamlit as st
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import json
 import os
 import pandas as pd
 import streamlit.components.v1 as components
 import glob
+from utils import get_user_base_dir
+from github_storage import github_enabled, list_lectures, list_json, load_json, save_json
+
+def _user_id():
+    return st.session_state.get('user_id', 'anonymous')
 
 def load_lecture_names():
-    """lectures 디렉토리에서 사용 가능한 강의 목록 가져오기"""
-    timer_logs_dir = "timer_logs"
-    lectures = []
-    
-    if os.path.exists(timer_logs_dir):
-        for lecture_name in os.listdir(timer_logs_dir):
-            lecture_path = os.path.join(timer_logs_dir, lecture_name)
-            if os.path.isdir(lecture_path):
-                lectures.append(lecture_name)
-    
-    return lectures
+    """Return list of lectures for current user (GitHub or local)."""
+    if github_enabled():
+        return list_lectures(_user_id())
+    timer_logs_dir = get_user_base_dir()
+    if not os.path.exists(timer_logs_dir):
+        return []
+    return [d for d in os.listdir(timer_logs_dir) if os.path.isdir(os.path.join(timer_logs_dir, d))]
 
 def save_lecture_names(lecture_names):
     """lecture_names.json에 강의 이름 목록 저장"""
@@ -34,40 +36,95 @@ def ensure_directory(directory):
         os.makedirs(directory)
 
 def save_records_to_json(lecture_name, records):
-    """타이머 기록을 JSON 파일로 저장"""
+    """Save the current session's records.
+
+    1. Writes to GitHub only when the user explicitly presses **기록 저장**.
+    2. Keeps an up-to-date cached list of JSON files so we don't query GitHub on
+       every Streamlit rerun (which happens whenever the user presses
+       **Record Time**).
+    """
+
+    now_kst = datetime.now(tz=ZoneInfo("Asia/Seoul"))
+    date = now_kst.strftime("%Y-%m-%d")
+    timestamp = now_kst.strftime("%H%M%S")
+    filename = f"{date}_{timestamp}.json"
+
+    # --- primary: GitHub ---
+    if github_enabled():
+        if save_json(_user_id(), lecture_name, filename, records):
+            # 새 파일을 캐시에 반영하여 이후 rerun 에서 GitHub 호출이 발생하지 않도록 함
+            key = f"json_files_{lecture_name}"
+            new_path = f"github://{lecture_name}/{filename}"
+            st.session_state.setdefault(key, [])
+            if new_path not in st.session_state[key]:
+                st.session_state[key].insert(0, new_path)
+            return new_path
+
+    # --- fallback: local ---
     try:
-        #lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
-        date = datetime.now().strftime("%Y-%m-%d")
-        timestamp = datetime.now().strftime("%H%M%S")  # 24-hour format HHMMSS
-        directory = f"timer_logs/{lecture_name}"
+        directory = os.path.join(get_user_base_dir(), lecture_name)
         ensure_directory(directory)
-        
-        file_path = f"{directory}/{date}_{timestamp}.json"
-        
+        file_path = os.path.join(directory, filename)
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(records, f, ensure_ascii=False, indent=2)
+
+        # update local cache as well
+        key = f"json_files_{lecture_name}"
+        st.session_state.setdefault(key, [])
+        if file_path not in st.session_state[key]:
+            st.session_state[key].insert(0, file_path)
+
         return file_path
     except Exception as e:
         st.error(f"JSON 파일 저장 중 오류: {e}")
         return None
 
-def load_records_from_json(file_path):
-    """JSON 파일에서 기록 로드"""
+def load_records_from_json(file_path_or_ref):
+    """Load records from local path or github ref (github://lecture/file)."""
+    if file_path_or_ref is None:
+        return []
+    if file_path_or_ref.startswith("github://"):
+        path_part = file_path_or_ref.replace("github://", "", 1)
+        lecture, filename = path_part.split("/", 1)
+        return load_json(_user_id(), lecture, filename)
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path_or_ref, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except Exception as e:
-        st.error(f"JSON 파일 로드 중 오류: {e}")
+    except Exception:
+        st.error("JSON 파일 로드 중 오류")
         return []
 
 def get_existing_json_files(lecture_name):
-    """강의에 해당하는 기존 JSON 파일 목록 반환"""
-    #lecture_name = lecture_name.replace("/", "_").replace("\\", "_")
-    directory = f"timer_logs/{lecture_name}"
-    if os.path.exists(directory):
-        json_files = glob.glob(f"{directory}/*.json")
-        return sorted(json_files, reverse=True)  # 최신 파일이 먼저 오도록 정렬
-    return []
+    """Return previously saved JSON file list for a lecture.
+
+    To avoid a network round-trip to GitHub on every rerun we cache the values
+    in `st.session_state`.  The cache is refreshed only when:
+      • the user selects a different lecture (=> new cache key), or
+      • the user presses **기록 저장** which adds the newly created file to the
+        cached list (see `save_records_to_json`).
+    """
+
+    if not lecture_name:
+        return []
+
+    key = f"json_files_{lecture_name}"
+
+    # If we already have the list cached, return it straight away (0-latency)
+    if key in st.session_state:
+        return st.session_state[key]
+
+    # Otherwise, fetch once and cache the result
+    if github_enabled():
+        files = [f"github://{lecture_name}/{name}" for name in list_json(_user_id(), lecture_name)]
+    else:
+        directory = os.path.join(get_user_base_dir(), lecture_name)
+        if os.path.exists(directory):
+            files = sorted(glob.glob(f"{directory}/*.json"), reverse=True)
+        else:
+            files = []
+
+    st.session_state[key] = files
+    return files
 
 def lecture_timer_tab():
     """Slide Timer 탭 구현"""
@@ -96,6 +153,8 @@ def lecture_timer_tab():
         st.session_state.notes_input = ""
     if 'selected_json_file' not in st.session_state:
         st.session_state.selected_json_file = None
+    if 'slide_title' not in st.session_state:
+        st.session_state.slide_title = ""
 
     # 두 개의 주요 컬럼으로 레이아웃 구성
     left_col, right_col = st.columns([1, 2])
@@ -169,6 +228,7 @@ def lecture_timer_tab():
 
         # Stopwatch 섹션
         # Slide Control 섹션
+        st.text_input("강의안명", key="slide_title")
         st.session_state.slide_number = st.number_input("Slide Number", min_value=1, value=st.session_state.slide_number, step=1, key="slide_input")
         # Start Time 입력 필드 (Pause 상태에서만 편집 가능)
         start_time_input = st.text_input(
@@ -343,6 +403,7 @@ def lecture_timer_tab():
             
             # 기록 추가
             st.session_state.records.append({
+                "slide_title": st.session_state.slide_title,
                 "slide_number": str(st.session_state.slide_number),
                 "start_time": start_time,
                 "end_time": current_time_str,
@@ -377,6 +438,7 @@ def lecture_timer_tab():
                 num_rows="dynamic",
                 use_container_width=True,
                 column_config={
+                    "slide_title": st.column_config.TextColumn("강의안명", help="강의안명"),
                     "slide_number": st.column_config.TextColumn("Slide Number", help="슬라이드 번호"),
                     "start_time": st.column_config.TextColumn("Start Time", help="시작 시간"),
                     "end_time": st.column_config.TextColumn("End Time", help="종료 시간"),

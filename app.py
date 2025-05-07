@@ -2,6 +2,7 @@ import streamlit as st
 from slide_timer import lecture_timer_tab
 from srt_parser import srt_parser_tab
 from settings import settings_tab
+from auth import validate_user, register_user
 
 st.set_page_config(
 page_title="Slide Scribe",
@@ -46,15 +47,56 @@ st.markdown("""
 
 
 def main():
+    st.title('Slide Scribe')
+    st.markdown('Made by 차유진')
     try:
+        # 로그인 상태 관리
+        if 'user_id' not in st.session_state:
+            st.session_state.user_id = None
+
+        def login_form():
+            with st.form("login_form"):
+                #st.subheader("Login")
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                submitted = st.form_submit_button("Login")
+            if submitted:
+                if validate_user(username, password):
+                    st.session_state.user_id = username
+                    st.rerun()
+                else:
+                    st.error("아이디 또는 비밀번호가 틀렸습니다.")
+
+        def register_form():
+            with st.form("register_form"):
+                #st.subheader("Register")
+                username = st.text_input("Username", key="reg_user")
+                password = st.text_input("Password", type="password", key="reg_pass")
+                password2 = st.text_input("Confirm Password", type="password", key="reg_pass2")
+                submitted = st.form_submit_button("Register")
+            if submitted:
+                if password != password2:
+                    st.error("비밀번호가 일치하지 않습니다.")
+                elif register_user(username, password):
+                    st.success("회원가입이 완료되었습니다. 로그인 해주세요.")
+                else:
+                    st.error("이미 존재하는 아이디입니다.")
+
+        if st.session_state.user_id is None:
+            login_tab, signup_tab = st.tabs(["로그인", "회원가입"])
+            with login_tab:
+                login_form()
+            with signup_tab:
+                register_form()
+            return
         
         # 세션 상태 초기화
         if 'result_df' not in st.session_state:
             st.session_state.result_df = None
         if 'active_tab' not in st.session_state:
             st.session_state.active_tab = "SRT Parser"
-        st.title('Slide Scribe')
-        st.markdown('Made by 차유진')
+        # st.title('Slide Scribe')
+        # st.markdown('Made by 차유진')
         # 탭 생성
         tab1, tab2, tab3 = st.tabs(["⏱️ Slide Timer", "📜 SRT Parser", "⚙️ Settings"])
         
