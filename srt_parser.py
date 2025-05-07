@@ -212,12 +212,29 @@ def srt_parser_tab():
         st.subheader("Parsed SRT")
         if st.session_state.result_df is not None:
             if not st.session_state.result_df.empty:
-                for _, row in st.session_state.result_df.iterrows():
-                    st.markdown(f'<div class="slide-number">Slide {row["Slide Number"]}</div>', unsafe_allow_html=True)
-                    # 마크다운 코드 블록으로 텍스트 출력 (문자열 분리)
-                    text_content = row['Text']
-                    markdown_text = f"```text\n{text_content}\n```"
-                    st.markdown(markdown_text)
+                # 편집 가능한 텍스트로 변환
+                edited_texts = []
+                for i, row in st.session_state.result_df.iterrows():
+                    st.markdown(f'##### Slide {row["Slide Number"]}')
+                    # 텍스트 에어리어를 사용하여 편집 가능하게 만들기
+                    text_key = f"text_{i}_{row['Slide Number']}"
+                    edited_text = st.text_area(
+                        "", 
+                        value=row['Text'],
+                        key=text_key,
+                        height=150,
+                        label_visibility="collapsed"
+                    )
+                    # 편집된 텍스트 저장
+                    edited_texts.append({
+                        'Slide Number': row['Slide Number'],
+                        'Text': edited_text
+                    })
+                
+                # 편집된 결과 저장 버튼
+                if st.button("Save Edited Text", use_container_width=True):
+                    st.session_state.result_df = pd.DataFrame(edited_texts)
+                    st.success("텍스트가 업데이트되었습니다.")
             else:
                 st.warning("추출된 내용이 없습니다.")
         else:
