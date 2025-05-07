@@ -13,7 +13,7 @@ from utils import (
     delete_lecture,
     load_records_from_json,
 )
-from github_storage import github_enabled
+from github_storage import github_enabled, save_json
 
 def save_lecture_names(lecture_names):
     """lecture_names.json에 강의 이름 목록 저장"""
@@ -113,12 +113,19 @@ def manage_json_files():
                 try:
                     # JSON 파일 검증
                     json_data = json.loads(uploaded_file_info["content"])
-                    # 파일 저장 경로
-                    upload_path = os.path.join(get_user_base_dir(), selected_lecture, uploaded_file_info["name"])
-                    ensure_directory(os.path.join(get_user_base_dir(), selected_lecture))
-                    # JSON 파일 저장
-                    with open(upload_path, 'w', encoding='utf-8') as f:
-                        json.dump(json_data, f, ensure_ascii=False, indent=2)
+                    if github_enabled():
+                        # GitHub 저장소에 파일 업로드
+                        from utils import _user_id  # 내부 함수 사용
+                        if not save_json(_user_id(), selected_lecture, uploaded_file_info["name"], json_data):
+                            st.error("GitHub 저장소에 파일을 저장하지 못했습니다.")
+                            raise RuntimeError("GitHub save failed")
+                    else:
+                        # 파일 저장 경로 (로컬)
+                        upload_path = os.path.join(get_user_base_dir(), selected_lecture, uploaded_file_info["name"])
+                        ensure_directory(os.path.join(get_user_base_dir(), selected_lecture))
+                        # JSON 파일 저장 (로컬)
+                        with open(upload_path, 'w', encoding='utf-8') as f:
+                            json.dump(json_data, f, ensure_ascii=False, indent=2)
                     # 성공 메시지 저장
                     st.session_state[f"upload_success_{selected_lecture}"] = f"{uploaded_file_info['name']} 파일을 불러왔습니다."
                     # 업로드 상태 초기화 및 파일 업로더 리셋
