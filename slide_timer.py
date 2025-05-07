@@ -146,10 +146,11 @@ def lecture_timer_tab():
     # 두 개의 주요 컬럼으로 레이아웃 구성
     left_col, right_col = st.columns([1, 2])
 
+    available_lectures = load_lecture_names()
     with left_col:
         lecture_name = st.selectbox(
             "강의 선택",
-            st.session_state.lecture_names,
+            available_lectures,
             key="lecture_name",
             index=None,
             placeholder="강의를 선택해주세요",
