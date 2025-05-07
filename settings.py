@@ -251,6 +251,8 @@ def manage_lectures():
                                 # 파일이 이미 존재하거나 기타 오류 시 무시
                                 pass
                     # -------------------------------------------------------
+                    # invalidate cached lecture list
+                    st.session_state.pop("lecture_names", None)
                     st.success(f"강의가 추가되었습니다: {new_lecture}")
                     st.rerun()
                 else:
@@ -276,6 +278,8 @@ def manage_lectures():
                 for lecture in selected_lectures:
                     # 로컬 및 GitHub 모두 삭제
                     delete_lecture(lecture)
+                # invalidate cache
+                st.session_state.pop("lecture_names", None)
                 st.success(f"{len(selected_lectures)}개의 강의가 삭제되었습니다.")
                 st.rerun()
             else:

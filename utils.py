@@ -52,15 +52,21 @@ def load_lecture_names() -> List[str]:
     • Otherwise, the list is produced from the local file-system under
       `timer_logs/<user_id>`.
     """
-    if github_enabled():
-        return list_lectures(_user_id())
+    cache_key = "lecture_names"
+    if cache_key in st.session_state:
+        return st.session_state[cache_key]
 
-    base_dir = get_user_base_dir()
-    if not os.path.exists(base_dir):
-        return []
-    return sorted(
-        [d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))]
-    )
+    if github_enabled():
+        names = list_lectures(_user_id())
+    else:
+        base_dir = get_user_base_dir()
+        if not os.path.exists(base_dir):
+            names = []
+        else:
+            names = sorted([d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))])
+
+    st.session_state[cache_key] = names
+    return names
 
 
 def list_json_files_for_lecture(lecture: str, *, names_only: bool = True) -> List[str]:
@@ -79,19 +85,30 @@ def list_json_files_for_lecture(lecture: str, *, names_only: bool = True) -> Lis
     if not lecture:
         return []
 
-    if github_enabled():
-        files = list_json(_user_id(), lecture)
-        if names_only:
-            return files
-        return [f"github://{lecture}/{f}" for f in files]
+    cache_key = f"json_files_{lecture}"
 
-    directory = os.path.join(get_user_base_dir(), lecture)
-    if not os.path.exists(directory):
-        return []
-    paths = sorted(glob.glob(os.path.join(directory, "*.json")), reverse=True)
-    if names_only:
-        return [os.path.basename(p) for p in paths]
-    return paths
+    # If we already cached (full refs/local paths), reuse
+    if cache_key in st.session_state:
+        cached = st.session_state[cache_key]
+        if names_only:
+            return [os.path.basename(p) for p in cached]
+        return cached
+
+    # --- fetch fresh list once ---
+    if github_enabled():
+        names = list_json(_user_id(), lecture)
+        refs = [f"github://{lecture}/{f}" for f in names]
+    else:
+        directory = os.path.join(get_user_base_dir(), lecture)
+        if not os.path.exists(directory):
+            refs = []
+        else:
+            refs = sorted(glob.glob(os.path.join(directory, "*.json")), reverse=True)
+
+    # cache (refs/local paths)
+    st.session_state[cache_key] = refs
+
+    return [os.path.basename(r) for r in refs] if names_only else refs
 
 # ---------------------------------------------------------------------------
 # Loading records
