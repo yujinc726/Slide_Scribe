@@ -241,6 +241,21 @@ def manage_lectures():
                     save_lecture_names(st.session_state.lecture_names)
                     # 디렉토리 생성
                     ensure_directory(os.path.join(get_user_base_dir(), new_lecture))
+                    # --- GitHub 디렉토리가 비어있으면 보이지 않는 문제 해결 ---
+                    if github_enabled():
+                        # 내부 함수 import 는 순환 의존성 방지를 위해 로컬에서 수행
+                        from utils import _user_id  # pylint: disable=import-outside-toplevel
+                        from github_storage import _get_repo  # pylint: disable=import-outside-toplevel, protected-access
+
+                        repo = _get_repo()
+                        if repo is not None:
+                            placeholder_path = f"timer_logs/{_user_id()}/{new_lecture}/.gitkeep"
+                            try:
+                                repo.create_file(placeholder_path, f"init {new_lecture}", "")
+                            except Exception:
+                                # 파일이 이미 존재하거나 기타 오류 시 무시
+                                pass
+                    # -------------------------------------------------------
                     st.success(f"강의가 추가되었습니다: {new_lecture}")
                     st.rerun()
                 else:
