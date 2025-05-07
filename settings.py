@@ -15,15 +15,6 @@ from utils import (
 )
 from github_storage import github_enabled, save_json
 
-def save_lecture_names(lecture_names):
-    """lecture_names.json에 강의 이름 목록 저장"""
-    lecture_names_file = "lecture_names.json"
-    try:
-        with open(lecture_names_file, 'w', encoding='utf-8') as f:
-            json.dump(lecture_names, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        st.error(f"강의 이름 저장 중 오류: {e}")
-
 def ensure_directory(directory):
     """디렉토리가 존재하는지 확인하고 없으면 생성"""
     if not os.path.exists(directory):
@@ -238,7 +229,6 @@ def manage_lectures():
             if new_lecture.strip():
                 if new_lecture not in st.session_state.lecture_names:
                     st.session_state.lecture_names.append(new_lecture)
-                    save_lecture_names(st.session_state.lecture_names)
                     # 디렉토리 생성
                     ensure_directory(os.path.join(get_user_base_dir(), new_lecture))
                     # --- GitHub 디렉토리가 비어있으면 보이지 않는 문제 해결 ---
@@ -286,7 +276,6 @@ def manage_lectures():
                     delete_lecture(lecture)
                     if lecture in st.session_state.lecture_names:
                         st.session_state.lecture_names.remove(lecture)
-                save_lecture_names(st.session_state.lecture_names)
                 st.success(f"{len(selected_lectures)}개의 강의가 삭제되었습니다.")
                 st.rerun()
             else:

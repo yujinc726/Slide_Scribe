@@ -6,29 +6,16 @@ import os
 import pandas as pd
 import streamlit.components.v1 as components
 import glob
-from utils import get_user_base_dir
-from github_storage import github_enabled, list_lectures, list_json, load_json, save_json
+from utils import get_user_base_dir, load_lecture_names
+from github_storage import github_enabled, list_json, load_json, save_json
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
 
 def _user_id():
+    """Return the current user id stored in session (fallback 'anonymous')."""
     return st.session_state.get('user_id', 'anonymous')
-
-def load_lecture_names():
-    """Return list of lectures for current user (GitHub or local)."""
-    if github_enabled():
-        return list_lectures(_user_id())
-    timer_logs_dir = get_user_base_dir()
-    if not os.path.exists(timer_logs_dir):
-        return []
-    return [d for d in os.listdir(timer_logs_dir) if os.path.isdir(os.path.join(timer_logs_dir, d))]
-
-def save_lecture_names(lecture_names):
-    """lecture_names.json에 강의 이름 목록 저장"""
-    lecture_names_file = "lecture_names.json"
-    try:
-        with open(lecture_names_file, 'w', encoding='utf-8') as f:
-            json.dump(lecture_names, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        st.error(f"강의 이름 저장 중 오류: {e}")
 
 def ensure_directory(directory):
     """디렉토리가 존재하는지 확인하고 없으면 생성"""
