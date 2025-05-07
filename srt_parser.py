@@ -113,6 +113,7 @@ def process_files(srt_file=None, json_ref=None):
     subtitles.sort(key=lambda x: x['start_time'])
 
     for _, row in df.iterrows():
+        slide_title = row.get('slide_title', row.get('Slide Title'))
         slide_num = row.get('slide_number', row.get('Slide Number'))
         start_time = parse_srt_time(row.get('start_time', row.get('Start Time')))
         end_time = parse_srt_time(row.get('end_time', row.get('End Time')))
@@ -134,6 +135,7 @@ def process_files(srt_file=None, json_ref=None):
 
         if texts:
             output_data.append({
+                'Slide Title': slide_title,
                 'Slide Number': slide_num,
                 'Text': ' '.join(texts)
             })
@@ -215,14 +217,14 @@ def srt_parser_tab():
                 # 편집 가능한 텍스트로 변환
                 edited_texts = []
                 for i, row in st.session_state.result_df.iterrows():
-                    st.markdown(f'##### Slide {row["Slide Number"]}')
+                    st.markdown(f'##### Slide {row["Slide Number"]} - {row["Slide Title"]}')
                     # 텍스트 에어리어를 사용하여 편집 가능하게 만들기
                     text_key = f"text_{i}_{row['Slide Number']}"
                     edited_text = st.text_area(
                         "", 
                         value=row['Text'],
                         key=text_key,
-                        height=150,
+                        height=200,
                         label_visibility="collapsed"
                     )
                     # 편집된 텍스트 저장
@@ -231,10 +233,6 @@ def srt_parser_tab():
                         'Text': edited_text
                     })
                 
-                # 편집된 결과 저장 버튼
-                if st.button("Save Edited Text", use_container_width=True):
-                    st.session_state.result_df = pd.DataFrame(edited_texts)
-                    st.success("텍스트가 업데이트되었습니다.")
             else:
                 st.warning("추출된 내용이 없습니다.")
         else:
