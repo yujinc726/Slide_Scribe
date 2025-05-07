@@ -5,9 +5,9 @@ import json
 import os
 import pandas as pd
 import streamlit.components.v1 as components
-import glob
 from utils import get_user_base_dir, load_lecture_names
-from github_storage import github_enabled, list_json, load_json, save_json
+from utils import list_json_files_for_lecture
+from github_storage import github_enabled, load_json, save_json
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -81,38 +81,6 @@ def load_records_from_json(file_path_or_ref):
         st.error("JSON 파일 로드 중 오류")
         return []
 
-def get_existing_json_files(lecture_name):
-    """Return previously saved JSON file list for a lecture.
-
-    To avoid a network round-trip to GitHub on every rerun we cache the values
-    in `st.session_state`.  The cache is refreshed only when:
-      • the user selects a different lecture (=> new cache key), or
-      • the user presses **기록 저장** which adds the newly created file to the
-        cached list (see `save_records_to_json`).
-    """
-
-    if not lecture_name:
-        return []
-
-    key = f"json_files_{lecture_name}"
-
-    # If we already have the list cached, return it straight away (0-latency)
-    if key in st.session_state:
-        return st.session_state[key]
-
-    # Otherwise, fetch once and cache the result
-    if github_enabled():
-        files = [f"github://{lecture_name}/{name}" for name in list_json(_user_id(), lecture_name)]
-    else:
-        directory = os.path.join(get_user_base_dir(), lecture_name)
-        if os.path.exists(directory):
-            files = sorted(glob.glob(f"{directory}/*.json"), reverse=True)
-        else:
-            files = []
-
-    st.session_state[key] = files
-    return files
-
 def lecture_timer_tab():
     """Slide Timer 탭 구현"""
     #st.header("Slide Timer")
@@ -159,7 +127,7 @@ def lecture_timer_tab():
             st.info("Settings 탭에서 강의를 추가해주세요.")
         
         # 기존 JSON 파일 선택
-        json_files = get_existing_json_files(lecture_name)
+        json_files = list_json_files_for_lecture(lecture_name, names_only=False)
         json_options = ["새 기록 시작"] + [os.path.basename(f) for f in json_files]
         selected_json = st.selectbox(
             "기록 선택",
