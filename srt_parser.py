@@ -171,6 +171,7 @@ def srt_parser_tab():
             selected_lecture = st.selectbox(
                 "강의 선택",
                 available_lectures,
+<<<<<<< HEAD
                 key="lecture_selector",
                 index=None,
                 placeholder="강의를 선택해주세요",
@@ -202,6 +203,28 @@ def srt_parser_tab():
         
         # 처리 버튼
         if st.button("Parse SRT", type='primary', use_container_width=True, disabled=not (srt_file and json_ref)):
+=======
+                key="lecture_selector"
+            )
+            
+            json_files = get_json_files_for_lecture(selected_lecture)
+            if json_files:
+                selected_json_file = st.selectbox(
+                    "기록 선택",
+                    json_files,
+                    key="json_file_selector"
+                )
+                json_path = os.path.join("timer_logs", selected_lecture, selected_json_file)
+            else:
+                st.info(f"'{selected_lecture}'의 JSON 파일을 찾을 수 없습니다.")
+                json_path = None
+        else:
+            st.info("등록된 강의가 없습니다.")
+            json_path = None
+        
+        # 처리 버튼
+        if st.button("Parse SRT"):
+>>>>>>> parent of 02282ef (Update srt_parser.py)
             if srt_file is None:
                 st.error("SRT 파일을 업로드 해주세요.")
             elif json_ref is None:
@@ -211,7 +234,7 @@ def srt_parser_tab():
                     st.session_state.result_df = process_files(srt_file, json_ref)
     
     with col2:
-        st.subheader("Parsed SRT")
+        st.subheader("Results")
         if st.session_state.result_df is not None:
             if not st.session_state.result_df.empty:
                 # 편집 가능한 텍스트로 변환
