@@ -11,8 +11,8 @@ def transcriber_tab():
 %cd Whisper-AI-with-Gradio
 !pip install -r requirements.txt
 %run main.py"""
-    st.text_area("code", value=code, height=120)
-    st.code(code, language="python", line_numbers=True, height=120)
+    st.text_area("", valuecode, height=120)
+    #st.code(code, language="python", line_numbers=True, height=120)
 
     with st.expander("코드 실행 방법"):
         #st.subheader("코드 실행 방법")
