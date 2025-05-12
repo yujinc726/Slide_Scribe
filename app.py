@@ -103,10 +103,10 @@ def main():
             lecture_timer_tab()
         
         with tab2:
-            srt_parser_tab()
+            transcriber_tab()
         
         with tab3:
-            transcriber_tab()
+            srt_parser_tab()
             
         with tab4:
             settings_tab()
