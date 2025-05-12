@@ -24,7 +24,6 @@ def transcriber_tab():
         ]
         for i, step in enumerate(steps, 1):
             st.markdown(f"{i}. {step}")
-        st.markdown("---")
 
     with st.expander("Whisper AI 설정 가이드"):
         #st.subheader("Whisper AI 설정 가이드")
@@ -37,4 +36,3 @@ def transcriber_tab():
         }
         for key, value in settings.items():
             st.markdown(f"- **{key}**: {value}")
-        st.markdown("---")
