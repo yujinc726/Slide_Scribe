@@ -1,8 +1,22 @@
 import streamlit as st
 
-st.markdown("AI 기반 음성 자막 생성 도구를 Google Colab에서 실행하세요!")
+st.markdown("""
+    <style>
+    .stMarkdown, .stText {
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    .stCodeBlock {
+        background-color: #f6f8fa;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-def display_colab_link():
+def transcriber_tab():
+    st.markdown("AI 기반 음성 자막 생성 도구를 Google Colab에서 실행하세요!")
+
     st.subheader("Google Colab 실행")
     colab_url = "https://colab.research.google.com/drive/14FvsarkxDMjGCudHym-ttJy0qzwKu41o?usp=sharing"
     st.markdown(f"[Google Colab에서 실행하기]({colab_url})")
@@ -14,7 +28,6 @@ def display_colab_link():
     st.code(default_code, language="python")
     st.caption("위 코드를 복사하여 Google Colab에서 실행하세요.")
 
-def display_execution_guide():
     st.subheader("코드 실행 방법")
     steps = [
         "위 링크에 접속하거나 코드를 복사하여 Google Colab에 붙여넣습니다.",
@@ -26,7 +39,6 @@ def display_execution_guide():
         st.markdown(f"{i}. {step}")
     st.markdown("---")
 
-def display_whisper_settings():
     """Whisper AI 설정 방법을 안내합니다."""
     st.subheader("Whisper AI 설정 가이드")
     settings = {
@@ -39,22 +51,3 @@ def display_whisper_settings():
     for key, value in settings.items():
         st.markdown(f"- **{key}**: {value}")
     st.markdown("---")
-
-def main():
-    st.markdown("""
-        <style>
-        .stMarkdown, .stText {
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        .stCodeBlock {
-            background-color: #f6f8fa;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-    display_colab_link()
-    display_execution_guide()
-    display_whisper_settings()
