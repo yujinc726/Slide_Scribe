@@ -182,7 +182,7 @@ def lecture_timer_tab():
                     st.session_state.elapsed_time = 0
                     st.session_state.start_time = None
                     st.session_state.start_time_value = "00:00:00.000"
-        def update_slide_number(value):
+        def update_slide_number():
             st.session_state.slide_number = st.session_state.slide_number_input
         slide_title_col, slide_number_col = st.columns([2, 1])
         with slide_title_col:
