@@ -102,12 +102,15 @@ def lecture_timer_tab():
         st.session_state.slide_number = 1
     if 'start_time_value' not in st.session_state:
         st.session_state.start_time_value = "00:00:00.000"
-    if 'notes_input' not in st.session_state:
-        st.session_state.notes_input = ""
     if 'selected_json_file' not in st.session_state:
         st.session_state.selected_json_file = None
     if 'slide_title' not in st.session_state:
         st.session_state.slide_title = ""
+    if 'should_reset_notes' in st.session_state and st.session_state.should_reset_notes:
+        st.session_state.notes = ""
+        st.session_state.should_reset_notes = False
+    elif 'notes' not in st.session_state:
+        st.session_state.notes = ""
 
     # 두 개의 주요 컬럼으로 레이아웃 구성
     left_col, right_col = st.columns([1, 2])
@@ -336,7 +339,7 @@ def lecture_timer_tab():
                 st.rerun()
 
         # Note 섹션
-        st.text_input("Notes", key="notes")
+        st.text_input("Notes", key="notes", placeholder="메모를 입력해주세요.")
 
         if st.button("Record Time", key="record_button", help="Press to record", type='primary', use_container_width=True, disabled=not lecture_name):
             # 현재 경과 시간 계산
@@ -368,7 +371,7 @@ def lecture_timer_tab():
             # 다음 슬라이드의 시작 시간 및 슬라이드 번호 업데이트
             st.session_state.last_slide_start_time = current_time_str
             st.session_state.slide_number += 1
-            st.session_state.notes = ""
+            st.session_state.should_reset_notes = True
             st.rerun()
 
         # JSON 저장
