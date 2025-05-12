@@ -188,7 +188,7 @@ def lecture_timer_tab():
         with slide_title_col:
             st.text_input("Slide Title", key="slide_title")
         with slide_number_col:
-            st.number_input("Slide Number", min_value=0, value=st.session_state.slide_number, step=1, key="slide_number_input", onchange=update_slide_number)
+            st.number_input("Slide Number", min_value=0, value=st.session_state.slide_number, step=1, key="slide_number_input", on_change=update_slide_number)
         # Start Time 입력 필드 (Pause 상태에서만 편집 가능)
         start_time_input = st.text_input(
             "Start Time",
