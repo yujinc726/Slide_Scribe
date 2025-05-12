@@ -6,7 +6,7 @@ from settings import settings_tab
 from auth import validate_user, register_user
 
 st.set_page_config(
-page_title="Slide Scribe",
+page_title="Slide-Scribe",
 page_icon="✨",
 layout="wide",
 initial_sidebar_state="expanded"
@@ -48,7 +48,7 @@ st.markdown("""
 
 
 def main():
-    st.title('Slide-Scribe')
+    st.title('✨ Slide-Scribe')
     st.markdown('Developed by **Yujin Cha**')
     try:
         # 로그인 상태 관리
