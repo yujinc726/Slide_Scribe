@@ -7,7 +7,7 @@ from auth import validate_user, register_user
 
 st.set_page_config(
 page_title="Slide Scribe",
-page_icon="📝",
+page_icon="✨",
 layout="wide",
 initial_sidebar_state="expanded"
 )
@@ -97,7 +97,7 @@ def main():
         if 'result_df' not in st.session_state:
             st.session_state.result_df = None
 
-        tab1, tab2, tab3, tab4 = st.tabs(["⏱️ Slide Timer", "✨ Transcriber", "📑 SRT Parser", "⚙️ Settings"])
+        tab1, tab2, tab3, tab4 = st.tabs(["⏱️ Slide Timer", "📝 Transcriber", "📑 SRT Parser", "⚙️ Settings"])
         
         with tab1:
             lecture_timer_tab()
