@@ -29,7 +29,7 @@ def transcriber_tab():
     with st.expander("Whisper AI 설정 가이드"):
         #st.subheader("Whisper AI 설정 가이드")
         settings = {
-            "Model Size": "모델 크기가 클수록 정확도가 높지만 처리 속도가 느립니다. Turbo 모델은 정확도와 속도의 균형을 유지합니다.",
+            "Model Size": "모델 크기가 클수록 정확도가 높지만 처리 속도가 느립니다. 단, Turbo 모델은 정확도를 최대한 유지하면서 빠른 속도를 나타냅니다.",
             "Language": "자막 생성 시 사용할 언어를 선택하세요.",
             "Stable-ts": "자막 파일의 타임스탬프를 안정화하는 모드입니다. (권장)",
             "Arrange Options": "자막 파일의 후처리 방식을 선택합니다.",
