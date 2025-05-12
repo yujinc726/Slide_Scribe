@@ -48,7 +48,7 @@ st.markdown("""
 
 def main():
     st.title('Slide-Scribe')
-    st.markdown('Developed by Yujin Cha (차유진)')
+    st.markdown('Developed by Yujin Cha')
     try:
         # 로그인 상태 관리
         if 'user_id' not in st.session_state:
