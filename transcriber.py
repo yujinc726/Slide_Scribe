@@ -7,11 +7,12 @@ def transcriber_tab():
     colab_url = "https://colab.research.google.com/drive/14FvsarkxDMjGCudHym-ttJy0qzwKu41o?usp=sharing"
     st.markdown(f"[Google Colab 접속]({colab_url})")
     
-    default_code = """!git clone https://github.com/yujinc726/Whisper-AI-with-Gradio.git
+    code = """!git clone https://github.com/yujinc726/Whisper-AI-with-Gradio.git
 %cd Whisper-AI-with-Gradio
 !pip install -r requirements.txt
 %run main.py"""
-    st.code(default_code, language="python", line_numbers=True)
+    st.text_area(code, height=120)
+    st.code(code, language="python", line_numbers=True, height=120)
 
     with st.expander("코드 실행 방법"):
         #st.subheader("코드 실행 방법")
