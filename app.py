@@ -48,13 +48,13 @@ st.markdown("""
 
 def main():
     st.title('Slide Scribe')
-    st.markdown('Developed by 차유진 | yujinc726@gmail.com | https://github.com/yujinc726')
+    st.markdown('Developed by 차유진')
     try:
         # 로그인 상태 관리
         if 'user_id' not in st.session_state:
             st.session_state.user_id = None
         else:
-            st.markdown(f'Logged in as {st.session_state.user_id}')
+            st.markdown(f'ID: "{st.session_state.user_id}"')
 
         def login_form():
             with st.form("login_form"):
