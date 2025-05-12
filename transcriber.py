@@ -1,19 +1,5 @@
 import streamlit as st
 
-st.markdown("""
-    <style>
-    .stMarkdown, .stText {
-        font-size: 16px;
-        line-height: 1.6;
-    }
-    .stCodeBlock {
-        background-color: #f6f8fa;
-        padding: 10px;
-        border-radius: 5px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
 def transcriber_tab():
     st.markdown("AI 기반 음성 자막 생성 도구를 Google Colab에서 실행하세요!")
 
