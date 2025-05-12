@@ -221,7 +221,7 @@ def srt_parser_tab():
                 for i, row in st.session_state.result_df.iterrows():
                     st.markdown(f'##### Slide {row["Slide Number"]}{' - ' + row["Slide Title"] if row["Slide Title"] else ""}')
                     if row["Notes"]:
-                        st.markdown(f'**Notes:** {row["notes"]}')
+                        st.markdown(f'**Notes:** {row["Notes"]}')
                     # 텍스트 에어리어를 사용하여 편집 가능하게 만들기
                     text_key = f"text_{i}_{row['Slide Number']}"
                     edited_text = st.text_area(
