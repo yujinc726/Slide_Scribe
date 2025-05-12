@@ -118,7 +118,7 @@ def process_files(srt_file=None, json_ref=None):
         start_time = parse_srt_time(row.get('start_time', row.get('Start Time')))
         end_time = parse_srt_time(row.get('end_time', row.get('End Time')))
         notes = row.get('notes', row.get('Notes'))
-        
+
         # sub_idx 전진 (현재 슬라이드 시작 이전 자막 스킵)
         while sub_idx < n_subs and subtitles[sub_idx]['end_time'] < start_time:
             sub_idx += 1
@@ -138,6 +138,7 @@ def process_files(srt_file=None, json_ref=None):
             output_data.append({
                 'Slide Title': slide_title,
                 'Slide Number': slide_num,
+                'Notes': notes,
                 'Text': ' '.join(texts)
             })
     
