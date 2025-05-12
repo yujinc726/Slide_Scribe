@@ -184,7 +184,7 @@ def lecture_timer_tab():
         with slide_title_col:
             st.text_input("Slide Title", key="slide_title")
         with slide_number_col:
-            st.session_state.slide_number = st.number_input("Slide Number", min_value=1, value=st.session_state.slide_number, step=1, key="slide_input")
+            st.session_state.slide_number = st.number_input("Slide Number", min_value=0, value=st.session_state.slide_number, step=1, key="slide_input")
         # Start Time 입력 필드 (Pause 상태에서만 편집 가능)
         start_time_input = st.text_input(
             "Start Time",
@@ -336,7 +336,7 @@ def lecture_timer_tab():
                 st.rerun()
 
         # Note 섹션
-        st.text_input("Notes", value="", key="notes")
+        st.text_input("Notes", key="notes")
 
         if st.button("Record Time", key="record_button", help="Press to record", type='primary', use_container_width=True, disabled=not lecture_name):
             # 현재 경과 시간 계산
@@ -368,8 +368,7 @@ def lecture_timer_tab():
             # 다음 슬라이드의 시작 시간 및 슬라이드 번호 업데이트
             st.session_state.last_slide_start_time = current_time_str
             st.session_state.slide_number += 1
-            st.session_state.notes_input = ""
-            st.session_state["notes_input"] = ""
+            st.session_state.notes = ""
             st.rerun()
 
         # JSON 저장
