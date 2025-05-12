@@ -3,7 +3,7 @@ import streamlit as st
 def transcriber_tab():
     #st.markdown("자막 생성 AI")
 
-    st.subheader("Google Colab 실행")
+    #st.subheader("Google Colab 실행")
     colab_url = "https://colab.research.google.com/drive/14FvsarkxDMjGCudHym-ttJy0qzwKu41o?usp=sharing"
     st.markdown(f"[Google Colab 접속]({colab_url})")
     
@@ -11,7 +11,7 @@ def transcriber_tab():
 %cd Whisper-AI-with-Gradio
 !pip install -r requirements.txt
 %run main.py"""
-    st.text_area("", value=code, height=120)
+    st.text_area("", value=code, height=120, label_visibility="collapsed")
     #st.code(code, language="python", line_numbers=True, height=120)
 
     with st.expander("코드 실행 방법"):
