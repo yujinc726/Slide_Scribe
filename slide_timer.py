@@ -380,7 +380,7 @@ def lecture_timer_tab():
                 st.session_state.records.append({
                     "slide_title": st.session_state.slide_title,
                     "slide_number": str(st.session_state.slide_number),
-                    "start_time": "00:00:00.000",
+                    "start_time": st.session_state.start_time.strftime("%H:%M:%S.%f")[:-3],
                     "end_time": "00:00:00.000",
                     "notes": st.session_state.notes
                 })
