@@ -14,7 +14,6 @@ from github_storage import github_enabled, load_json, save_json
 # ---------------------------------------------------------------------------
 
 def _user_id():
-    """Return the current user id stored in session (fallback 'anonymous')."""
     return st.session_state.get('user_id', 'anonymous')
 
 def ensure_directory(directory):
@@ -23,13 +22,6 @@ def ensure_directory(directory):
         os.makedirs(directory)
 
 def save_records_to_json(lecture_name, records):
-    """Save the current session's records.
-
-    1. Writes to GitHub only when the user explicitly presses **기록 저장**.
-    2. Keeps an up-to-date cached list of JSON files so we don't query GitHub on
-       every Streamlit rerun (which happens whenever the user presses
-       **Record Time**).
-    """
 
     now_kst = datetime.now(tz=ZoneInfo("Asia/Seoul"))
     date = now_kst.strftime("%Y-%m-%d")

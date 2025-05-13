@@ -13,6 +13,10 @@ initial_sidebar_state="expanded"
 )
 
 st.markdown("""
+<meta property="og:title" content="Slide-Scribe" />
+<meta property="og:description" content="슬라이드 타이머, 음성 녹음, SRT 파서 등 다양한 기능을 제공하는 강의 도우미 웹앱" />
+<meta property="og:image" content="https://postfiles.pstatic.net/20110616_42/elino_azera_1308230307685fJtJO_PNG/K-58.png" />
+<meta property="og:url" content="https://slide-scribe.app" />
 <style>
     .stTabs [data-baseweb="tab"] {
         padding: 10px 20px;
