@@ -384,6 +384,9 @@ def lecture_timer_tab():
                     "end_time": "00:00:00.000",
                     "notes": st.session_state.notes
                 })
+                st.session_state.slide_number += 1
+                st.session_state.should_reset_notes = True
+                st.rerun()
 
         # JSON 저장
         if st.button("기록 저장", use_container_width=True, disabled=not st.session_state.records):
