@@ -194,6 +194,7 @@ def lecture_timer_tab():
             "Start Time",
             value=st.session_state.start_time_value,
             key="start_time_input",
+            placeholder="00:00:00.000",
             disabled=st.session_state.timer_running
         )
         # Update start_time_value with user input
@@ -343,37 +344,46 @@ def lecture_timer_tab():
         st.text_input("Notes", key="notes", placeholder="메모를 입력해주세요.")
 
         if st.button("Record Time", key="record_button", help="Press to record", type='primary', use_container_width=True, disabled=not lecture_name):
-            # 현재 경과 시간 계산
-            current_elapsed_ms = st.session_state.elapsed_time
-            if st.session_state.timer_running and st.session_state.timer_start:
-                current_elapsed_ms += (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
-            
-            # start_time 확인 및 기본값 설정
-            if st.session_state.start_time is None:
-                st.session_state.start_time = datetime.combine(datetime.now().date(), datetime.time(0, 0, 0))
-            
-            # 현재 시간 계산
-            elapsed_seconds = current_elapsed_ms / 1000
-            current_time = st.session_state.start_time + timedelta(seconds=elapsed_seconds)
-            current_time_str = current_time.strftime("%H:%M:%S.%f")[:-3]
-            
-            # 이전 슬라이드의 시작 시간
-            start_time = st.session_state.last_slide_start_time if st.session_state.last_slide_start_time else st.session_state.start_time.strftime("%H:%M:%S.%f")[:-3]
-            
-            # 기록 추가
-            st.session_state.records.append({
-                "slide_title": st.session_state.slide_title,
-                "slide_number": str(st.session_state.slide_number),
-                "start_time": start_time,
-                "end_time": current_time_str,
-                "notes": st.session_state.notes
-            })
-            
-            # 다음 슬라이드의 시작 시간 및 슬라이드 번호 업데이트
-            st.session_state.last_slide_start_time = current_time_str
-            st.session_state.slide_number += 1
-            st.session_state.should_reset_notes = True
-            st.rerun()
+            try:
+                # 현재 경과 시간 계산
+                current_elapsed_ms = st.session_state.elapsed_time
+                if st.session_state.timer_running and st.session_state.timer_start:
+                    current_elapsed_ms += (datetime.now() - st.session_state.timer_start).total_seconds() * 1000
+                
+                # start_time 확인 및 기본값 설정
+                if st.session_state.start_time is None:
+                    st.session_state.start_time = datetime.combine(datetime.now().date(), datetime.time(0, 0, 0))
+                
+                # 현재 시간 계산
+                elapsed_seconds = current_elapsed_ms / 1000
+                current_time = st.session_state.start_time + timedelta(seconds=elapsed_seconds)
+                current_time_str = current_time.strftime("%H:%M:%S.%f")[:-3]
+                
+                # 이전 슬라이드의 시작 시간
+                start_time = st.session_state.last_slide_start_time if st.session_state.last_slide_start_time else st.session_state.start_time.strftime("%H:%M:%S.%f")[:-3]
+                
+                # 기록 추가
+                st.session_state.records.append({
+                    "slide_title": st.session_state.slide_title,
+                    "slide_number": str(st.session_state.slide_number),
+                    "start_time": start_time,
+                    "end_time": current_time_str,
+                    "notes": st.session_state.notes
+                })
+                
+                # 다음 슬라이드의 시작 시간 및 슬라이드 번호 업데이트
+                st.session_state.last_slide_start_time = current_time_str
+                st.session_state.slide_number += 1
+                st.session_state.should_reset_notes = True
+                st.rerun()
+            except Exception as e:
+                st.session_state.records.append({
+                    "slide_title": st.session_state.slide_title,
+                    "slide_number": str(st.session_state.slide_number),
+                    "start_time": "00:00:00.000",
+                    "end_time": "00:00:00.000",
+                    "notes": st.session_state.notes
+                })
 
         # JSON 저장
         if st.button("기록 저장", use_container_width=True, disabled=not st.session_state.records):
